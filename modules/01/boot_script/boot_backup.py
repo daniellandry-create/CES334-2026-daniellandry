@@ -13,7 +13,7 @@ def main():
     # Check for synced state with remote (to avoid merge conflicts)
     subprocess.run(['git', 'fetch', 'origin'], check=True)
     commits = subprocess.run(['git', 'log', 'HEAD...origin/main', '--oneline'], capture_output=True, text=True, check=True).stdout.strip()
-    push_to_remote = len(commits) = 0
+    push_to_remote = len(commits) == 0
 
     # Find ip address and write it to ip.md
     ip_address = subprocess.run(['hostname', '-I'], capture_output=True,text=True,check=True).stdout.strip()
