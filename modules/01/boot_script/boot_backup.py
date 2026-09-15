@@ -6,7 +6,7 @@ from datetime import datetime
 
 def main():
     # Go to repository directory
-    repo_root = "/home/stu3340/Documents/repos/CS3340-2026/"
+    repo_root = "/home/stu3340/Documents/repos/CS3340-2026-daniellandry/"
     os.chdir(repo_root)
     subprocess.run(['git', 'switch', 'main'], check=True)
 
@@ -27,8 +27,8 @@ def main():
         file.write(f"Current IP address: `{ip_address}`")
 
     # Copy important files specified in backup_list.txt to identical locations in rasberrypi
-    backup_list_path = Path("/home/stu3340/Documents/repos/CS3340-2026/modules/01/boot_script/backup_list.txt")
-    backup_root = "/home/stu3340/Documents/repos/CS3340-2026/raspberrypi"
+    backup_list_path = Path("/home/stu3340/Documents/repos/CS3340-2026-daniellandry/modules/01/boot_script/backup_list.txt")
+    backup_root = "/home/stu3340/Documents/repos/CS3340-2026-daniellandry/raspberrypi"
 
     with open(backup_list_path, "r") as file:
         for line in file:
