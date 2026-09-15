@@ -6,8 +6,8 @@ After=network-online.target
 [Service]
 User=stu3340
 Type=simple
-WorkingDirectory=/home/stu3340/Documents/repos/CS3340-2026/modules/01/boot_script
-ExecStart=/usr/bin/python3 /home/stu3340/Documents/repos/CS3340-2026-daniellandry/modules/01/boot_script/boot_backup.py
+WorkingDirectory=/home/stu3340/Documents/repos/CES334-2026-daniellandry/modules/01/boot_script
+ExecStart=/usr/bin/python3 /home/stu3340/Documents/repos/CES334-2026-daniellandry/modules/01/boot_script/boot_backup.py
 KillSignal=SIGINT
 Restart=on-failure
 
