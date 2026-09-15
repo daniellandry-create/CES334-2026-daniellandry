@@ -1,0 +1,2 @@
+/boot/firmware/config.txt
+/lib/systemd/system/boot_backup.service
