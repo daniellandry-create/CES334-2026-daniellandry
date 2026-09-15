@@ -20,7 +20,7 @@ def main():
 
     print(f"IP Address: {ip_address}")
 
-    ip_path = Path("/home/stu3340/Documents/repos/CS3340-2026/raspberrypi/etc/ip.md")
+    ip_path = Path("/home/stu3340/Documents/repos/CS3340-2026-daniellandry/raspberrypi/etc/ip.md")
 
     with open(ip_path, "w", encoding="utf-8") as file:
         file.write("## Daniel's Raspberry Pi\n")
