@@ -45,9 +45,17 @@ def main():
     if push_to_remote:
         curr_time = datetime.now()
 
-        subprocess.run(['git', 'add', repo_root], check=True)
-        subprocess.run(['git', 'commit', '-m', f'"Raspberry Pi power on backup: {curr_time}"'], check=True)
+    # Replace the unconditional git add + git commit + git push block with:
+
+    status = subprocess.run(['git', 'status', '--porcelain'], capture_output=True, text=True, check=True).stdout.strip()
+
+    if status:
+        curr_time = datetime.now()
+        subprocess.run(['git', 'add', '-A'], check=True)
+        subprocess.run(['git', 'commit', '-m', f'Raspberry Pi power on backup: {curr_time}'], check=True)
         subprocess.run(['git', 'push'], check=True)
+    else:
+        print("No changes to back up — skipping commit.")
 
 if __name__ == "__main__":
     main()
