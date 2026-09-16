@@ -46,7 +46,7 @@ def main():
         curr_time = datetime.now()
 
         subprocess.run(['git', 'add', repo_root], check=True)
-        subprocess.run(['git', 'commit', '-m', f'"Rasberry Pi power on backup: {curr_time}"'], check=True)
+        subprocess.run(['git', 'commit', '-m', f'"Raspberry Pi power on backup: {curr_time}"'], check=True)
         subprocess.run(['git', 'push'], check=True)
 
 if __name__ == "__main__":
