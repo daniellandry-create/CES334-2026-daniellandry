@@ -45,7 +45,7 @@ def main():
     if push_to_remote:
         curr_time = datetime.now()
 
-        subprocess.run(['git', 'add', 'repo_root'], check=True)
+        subprocess.run(['git', 'add', repo_root], check=True)
         subprocess.run(['git', 'commit', '-m', f'"Rasberry Pi power on backup: {curr_time}"'], check=True)
         subprocess.run(['git', 'push'], check=True)
 
