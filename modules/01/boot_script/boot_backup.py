@@ -32,7 +32,7 @@ def main():
 
     with open(backup_list_path, "r") as file:
         for line in file:
-            source_path = line.stip()
+            source_path = line.strip()
             backup_path = backup_root + source_path
 
             # Make parent directories as needed
