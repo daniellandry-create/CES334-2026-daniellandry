@@ -1,2 +1,4 @@
 /boot/firmware/config.txt
+/boot/firmware/cmdline.txt
 /lib/systemd/system/boot_backup.service
+/etc/
