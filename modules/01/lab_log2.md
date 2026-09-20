@@ -45,7 +45,12 @@ Part 2, SCP File Upload:
  
 Part 3 (Copying work to Daniel's Pi):
     1. When I ssh'ed into my pi I got a warning about my .ssh file being "unprotected." Issue was likely that .ssh keys were accessible by any user on laptop. Used chmod 700 ~/.ssh to fix
-    2. 
+    2. Useful git commands:
+        - git branch --show-current
+        - git branch -d branch_name
+        - git switch -
+        - git fetch origin -> git reset --hard origin/main
+        
 
 
 
