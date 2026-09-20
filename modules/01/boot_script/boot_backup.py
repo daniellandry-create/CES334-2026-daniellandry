@@ -5,7 +5,7 @@ import shutil
 from datetime import datetime
 
 def main():
-    repo_name = "CES3340-2026-daniellandry"
+    repo_name = "CES334-2026-daniellandry"
 
     # Go to repository directory
     repo_root = f"/home/stu3340/Documents/repos/{repo_name}/"
