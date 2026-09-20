@@ -1,0 +1,4 @@
+# Created by cloud-init v. 25.2 on Thu, 18 Jun 2026 00:32:05 +0000
+
+# User rules for stu3340
+stu3340 ALL=(ALL) NOPASSWD:ALL

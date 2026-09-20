@@ -1,0 +1,18 @@
+[connection]
+id=yale wireless
+uuid=fb53d871-61fc-435f-8266-48c8ed9b0f0f
+type=wifi
+interface-name=wlan0
+
+[wifi]
+mode=infrastructure
+ssid=yale wireless
+
+[ipv4]
+method=auto
+
+[ipv6]
+addr-gen-mode=default
+method=auto
+
+[proxy]

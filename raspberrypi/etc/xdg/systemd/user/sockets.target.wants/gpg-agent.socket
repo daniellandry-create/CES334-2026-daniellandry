@@ -1,0 +1,16 @@
+[Unit]
+Description=GnuPG cryptographic agent and passphrase cache
+Documentation=man:gpg-agent(1)
+
+[Socket]
+# gnupg2 doesn't use the GPG_AGENT_INFO environment variable since
+# v2.1.0, but gnupg1 still does so set it in case gnupg1 is installed.
+ExecStartPost=systemctl --user set-environment GPG_AGENT_INFO=%t/gnupg/S.gpg-agent:0:1
+ExecStopPre=systemctl --user unset-environment GPG_AGENT_INFO
+ListenStream=%t/gnupg/S.gpg-agent
+FileDescriptorName=std
+SocketMode=0600
+DirectoryMode=0700
+
+[Install]
+WantedBy=sockets.target

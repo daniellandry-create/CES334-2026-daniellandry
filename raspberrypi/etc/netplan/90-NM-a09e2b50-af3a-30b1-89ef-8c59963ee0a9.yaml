@@ -1,0 +1,17 @@
+network:
+  version: 2
+  wifis:
+    wlan0:
+      renderer: NetworkManager
+      match: {}
+      dhcp4: true
+      access-points:
+        "yalewireless":
+          networkmanager:
+            uuid: "a09e2b50-af3a-30b1-89ef-8c59963ee0a9"
+            name: "netplan-wlan0-yalewireless"
+            passthrough:
+              proxy._: ""
+      networkmanager:
+        uuid: "a09e2b50-af3a-30b1-89ef-8c59963ee0a9"
+        name: "netplan-wlan0-yalewireless"

@@ -1,0 +1,73 @@
+#!/bin/sh
+
+# Copyright (C) RealVNC Ltd.  All Rights Reserved.
+
+# Get the IP address of the primary network interface
+
+error_exit()
+{
+    echo $1
+    exit 1
+}
+
+primary_ip_linux()
+{
+    # On Linux, we can get the network interface corresponding to the
+    # default route from /proc/net/route, and feed it into "ifconfig"
+    # to get the IP address.
+    interf=`$awk '$2=="00000000" && int($4/2)%2==1 {print $1; exit}' /proc/net/route`
+    [ -n "$interf" ] || error_exit "No default network interface"
+    ip=`$ifconfig $interf 2>/dev/null | \
+        $tr ':' ' ' | \
+        $awk '$1=="inet" && $2=="addr" {print $3; exit}
+              $1=="inet" {print $2; exit}'`
+    [ -n "$ip" ] || ip=`$ipb -4 addr show $interf 2>/dev/null | \
+        $awk '$1 == "inet" {gsub(/\/.*$/, "", $2); print $2; exit}'`
+    [ -n "$ip" ] || error_exit "No IP address found"
+    echo $ip
+    exit 0
+}
+
+primary_ip_darwin()
+{
+    # On Darwin, "route get <IP-address>" tells us the network interface
+    # corresponding to the default route, and "ifconfig" tells us its IP
+    # address.  We use realvnc.com's current IP address as a fairly arbitrary
+    # address.
+    interf=$(route get 162.159.135.42 | \
+                 awk '$1 == "interface:" {print$2; exit}')
+    [ -n "$interf" ] || error_exit "No default network interface"
+    ip=`$ifconfig $interf 2>/dev/null | \
+        $awk '$1 == "inet" { print $2; exit }'`
+    [ -n "$ip" ] || error_exit "No IP address found"
+    echo $ip
+    exit 0
+}
+
+# Default program locations
+awk=/usr/bin/awk
+ifconfig=/sbin/ifconfig
+ipb=/sbin/ip
+netstat=/bin/netstat
+tr=/usr/bin/tr
+
+# Override any locale settings that might affect the output of commands
+if test "${LANG+set}" = set; then LANG=C; export LANG; fi
+if test "${LC_ALL+set}" = set; then LC_ALL=C; export LC_ALL; fi
+if test "${LC_MESSAGES+set}" = set; then LC_MESSAGES=C; export LC_MESSAGES; fi
+if test "${LC_CTYPE+set}" = set; then LC_CTYPE=C; export LC_CTYPE; fi
+
+# Platform-specific overrides
+SYSNAME=`uname -s`
+case "$SYSNAME" in
+    Linux)
+        primary_ip_linux
+        ;;
+    Darwin)
+        netstat=/usr/sbin/netstat
+        primary_ip_darwin
+        ;;
+    *)
+        error_exit "Unsupported platform"
+        ;;
+esac
