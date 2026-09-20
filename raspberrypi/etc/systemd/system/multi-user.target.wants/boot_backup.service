@@ -7,7 +7,7 @@ After=network-online.target
 User=root
 Type=simple
 WorkingDirectory=/home/stu3340/Documents/repos/CES334-2026-daniellandry/modules/01/boot-script
-ExecStart=sudo /usr/bin/python3 /home/stu3340/Documents/repos/CES334-2026/modules/01/boot-script/boot_backup.py
+ExecStart=/usr/bin/python3 /home/stu3340/Documents/repos/CES334-2026-daniellandry/modules/01/boot-script/boot_backup.py
 KillSignal=SIGINT
 Restart=on-failure
 
