@@ -5,7 +5,7 @@ from datetime import datetime
 
 def main():
     source_path = "/home/stu3340/Documents/ip-tracking/ip.txt"
-    dest_path = "ryan@10.74.22.174:/Users/daniellandry/Documents/ip.txt"
+    dest_path = "daniellandry@10.66.126.124:/Users/daniellandry/Documents/ip-tracking/ip.txt"
     private_key = "/home/stu3340/.ssh/id_ed25519"
 
     curr_time = datetime.now()
