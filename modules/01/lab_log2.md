@@ -43,6 +43,9 @@ Part 2, SCP File Upload:
     6. Copied code similar to our update ip.md code from part 1 in order to update ip.txt file with the current IP address before doing SCP
     7. Did crontab -e and entered the following: "*/10 * * * * /usr/bin/python3 /home/stu3340/Documents/CS3340-2026/modules/01/scp-script/send_ip.py
  
+Part 3 (Copying work to Daniel's Pi):
+    1. When I ssh'ed into my pi I got a warning about my .ssh file being "unprotected." Issue was likely that .ssh keys were accessible by any user on laptop. Used chmod 700 ~/.ssh to fix
+    2. 
 
 
 
