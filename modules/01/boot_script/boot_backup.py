@@ -31,7 +31,7 @@ def main():
     curr_time = datetime.now()
 
     with open(ip_path, "w", encoding="utf-8") as file:
-        file.write("## Ryan's Raspberry Pi\n");
+        file.write("## Daniel's Raspberry Pi\n")
         file.write(f"Current IP address: `{ip_address}`\n")
         file.write(f"Last updated: {curr_time}")
 
