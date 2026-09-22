@@ -1,26 +1,26 @@
 // Where your "setup()" and "draw()" functions live
 const sources = [];
-const num_vehicles = 5;
+const num_vehicles = 1000;
 const options = ['aggression', 'love', 'fear', 'explorer'];
-const colors = ['red', 'orange', 'yellow'];
-let color;
+const colors = ['red', 'purple', 'blue','orange'];
+const vehicle_size = 10
+
 
 function setup(){
     createCanvas(windowWidth, windowHeight);
     for (let i = 0; i<num_vehicles; i++){
         num = Math.floor(4 * Math.random());
-        sources[i] = vehicle(options[num]);
+        sources[i] = new vehicle([random(width), random(height)], random(TWO_PI), {wiring: options[num]}, colors[num]);
     }
 
 }
 
 function draw(){
-    background(220);
-    nostroke();
-    color = Math.floor(3*Math.random());
-    fill('blue');
+    background(0, 10);
+    noStroke();
     for (let i = 0; i < sources.length; i++){
-        circle(sources[i].coords[0]%windowWidth, sources[i].coords[1]%windowHeight);
+        fill(sources[i].clr);
+        circle(sources[i].coords[0], sources[i].coords[1], vehicle_size);
         sources[i].update(sources);
     }
 }

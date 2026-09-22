@@ -7,11 +7,11 @@ const wirings = {
     explorer:       s => [-1, -1]
 }
 
-const speed_scalar = 25
-const dir_scalar = 1/30
+const speed_scalar = 5;
+const dir_scalar = 1/50
 
 class vehicle {
-    constructor(initial_coords, initial_dir, options){
+    constructor(initial_coords, initial_dir, options, clr){
         
         // Ensures at least SOMETHING was input for options 
         if (options == undefined){
@@ -22,7 +22,8 @@ class vehicle {
         this.dir_rad = initial_dir; // Vehicle direction in radians
         this.dir_cart = [Math.cos(this.dir_rad), Math.sin(this.dir_rad)]; // Initial vehicle direction - array of length two that is unit vector
 
-
+        // Initialize color
+        this.clr = clr;
         
         // Makes sure the option inputed is among the four defined options. If not, default to aggression
         if (options.wiring !== undefined){
@@ -89,8 +90,8 @@ class vehicle {
             if (sources[i] !== this){
                 // Vector toward the source, scaled by 1/d^3 so its magnitude falls off as 1/d^2
                 let d = this.distance(this.coords, sources[i].coords);
-                totx += (sources[i].coords[0] - this.coords[0])/Math.pow(d, 3);
-                toty += (sources[i].coords[1] - this.coords[1])/Math.pow(d, 3);
+                totx += (sources[i].coords[0] - this.coords[0])/Math.pow(d, 2);
+                toty += (sources[i].coords[1] - this.coords[1])/Math.pow(d, 2);
             }
         }
 
@@ -112,14 +113,20 @@ class vehicle {
         this.dir_cart = [Math.cos(this.dir_rad), Math.sin(this.dir_rad)];
 
         // Wiring of 1 speeds up with the magnitude of light_dir, -1 slows down with it
-        let intensity = this.magnitude(light_dir);
+        let intensity = 1000*this.magnitude(light_dir);
         let speed = this.wiring[1] === 1 ? speed_scalar*intensity : speed_scalar/(1 + intensity);
 
         let changex = speed*this.dir_cart[0];
         let changey = speed*this.dir_cart[1];
 
+        // Update coordinates
         this.coords[0] += changex;
         this.coords[1] += changey;
+
+        // Wrap around to other side of screen if necessary
+        this.coords[0] = ((this.coords[0] % width) + width) % width;
+        this.coords[1] = ((this.coords[1] % height) + height) % height;
+
     }
 
 }
