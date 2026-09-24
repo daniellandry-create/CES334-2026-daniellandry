@@ -7,7 +7,8 @@ const wirings = {
     explorer:       s => [-1, -1]
 }
 
-const speed_scalar = 25;
+const speed_scalar1 = 350;
+const speed_scalar2 = 1/5;
 const dir_scalar = 1/50
 
 class vehicle {
@@ -86,12 +87,14 @@ class vehicle {
 
         let totx = 0
         let toty = 0
+        let totDist = 0
         for (let i = 0; i<sources.length; i++){
             if (sources[i] !== this){
                 // Vector toward the source, scaled by 1/d^3 so its magnitude falls off as 1/d^2
                 let d = this.distance(this.coords, sources[i].coords);
                 totx += (sources[i].coords[0] - this.coords[0])/Math.pow(Math.max(d, 0.01), 2);
                 toty += (sources[i].coords[1] - this.coords[1])/Math.pow(Math.max(d, 0.01), 2);
+                totDist += this.distance(this.coords, sources[i].coords)/Math.pow(Math.max(d, 0.01), 2);
             }
         }
 
@@ -113,8 +116,8 @@ class vehicle {
         this.dir_cart = [Math.cos(this.dir_rad), Math.sin(this.dir_rad)];
 
         // Wiring of 1 speeds up with the magnitude of light_dir, -1 slows down with it
-        let intensity = 1000*this.magnitude(light_dir);
-        let speed = this.wiring[1] === 1 ? speed_scalar*intensity : speed_scalar/(1 + intensity);
+        let intensity = totDist;
+        let speed = this.wiring[1] === 1 ? speed_scalar1*totDist : speed_scalar2*(1-1/totDist);
 
         let changex = speed*this.dir_cart[0];
         let changey = speed*this.dir_cart[1];

@@ -12,7 +12,7 @@ function setup(){
     console.log("windowWidth:", windowWidth, "windowHeight", windowWidth);
     screen_size = (windowWidth*windowHeight);
     num_vehicles = Math.floor(screen_size/500000) + 4;
-    vehicle_size = Math.floor(screen_size/180000) + 5;
+    vehicle_size = Math.floor(screen_size/180000) + 50;
     for (let i = 0; i<num_vehicles; i++){
         num = Math.floor(4 * Math.random());
         sources[i] = new vehicle([random(width), random(height)], random(TWO_PI), {wiring: options[num]}, colors[num]);
