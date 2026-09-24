@@ -66,7 +66,7 @@ class vehicle {
     // Calculates smaller angle between vehicle direction vector and light source distance vector (dot product)
     theta_diff(dir, dist){
         // Clamped to [-1, 1] so floating point error can't push acos into NaN
-        let cos_theta = this.dot_product(dir, dist)/(this.magnitude(dir) * this.magnitude(dist));
+        let cos_theta = this.dot_product(dir, dist)/(this.magnitude(dir) * Math.max(this.magnitude(dist), 0.0001));
         return Math.acos(Math.max(-1, Math.min(1, cos_theta)));
     }
 
@@ -90,8 +90,8 @@ class vehicle {
             if (sources[i] !== this){
                 // Vector toward the source, scaled by 1/d^3 so its magnitude falls off as 1/d^2
                 let d = this.distance(this.coords, sources[i].coords);
-                totx += (sources[i].coords[0] - this.coords[0])/Math.pow(d, 2);
-                toty += (sources[i].coords[1] - this.coords[1])/Math.pow(d, 2);
+                totx += (sources[i].coords[0] - this.coords[0])/Math.pow(Math.max(d, 0.01), 2);
+                toty += (sources[i].coords[1] - this.coords[1])/Math.pow(Math.max(d, 0.01), 2);
             }
         }
 
