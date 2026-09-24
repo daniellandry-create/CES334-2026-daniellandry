@@ -8,6 +8,7 @@ const wirings = {
 }
 
 const speed_scalar = 10;
+const min_speed = 0.5;
 const pixels = 10;
 const dir_scalar = 1/75
 
@@ -42,9 +43,28 @@ class vehicle {
 
     }
 
-    // Calculates distance between a vehicle and light source given coordinates
-    distance(v, light){
-        return Math.sqrt(Math.pow(light[0]-v[0], 2) + Math.pow(light[1]-v[1], 2));
+    // Calculates the [x, y] offset from this vehicle to a light source.
+    // Because the screen wraps around, a source can be reached two ways along each axis:
+    // directly, or by going through the edge. We pick whichever way is shorter.
+    wrapped_offset(v, light){
+        let dx = light[0] - v[0];
+        let dy = light[1] - v[1];
+
+        // If the source is more than half the screen away, it's closer going through the edge
+        if (dx > width/2){
+            dx = dx - width;
+        }
+        if (dx < -width/2){
+            dx = dx + width;
+        }
+        if (dy > height/2){
+            dy = dy - height;
+        }
+        if (dy < -height/2){
+            dy = dy + height;
+        }
+
+        return [dx, dy];
     }
 
     // Calculates the magnitude of a vector
@@ -87,14 +107,21 @@ class vehicle {
 
         let totx = 0
         let toty = 0
-        let totDist = 0
+        let nearest = Infinity // Distance to the closest other vehicle (the brightest light)
         for (let i = 0; i<sources.length; i++){
             if (sources[i] !== this){
-                // Vector toward the source, scaled by 1/d^3 so its magnitude falls off as 1/d^2
-                let d = this.distance(this.coords, sources[i].coords);
-                totx += min((sources[i].coords[0] - this.coords[0]), )/Math.pow(Math.max(d, 0.01), 2);
-                toty += (sources[i].coords[1] - this.coords[1])/Math.pow(Math.max(d, 0.01), 2);
-                totDist += d/Math.pow(Math.max(d, 0.01), 1);
+                // Offset toward the source, taking the shortest path (possibly through a screen edge)
+                let offset = this.wrapped_offset(this.coords, sources[i].coords);
+                let d = this.magnitude(offset);
+
+                // Vector toward the source, divided by d^2 so closer sources pull harder
+                totx += offset[0]/Math.pow(Math.max(d, 0.01), 2);
+                toty += offset[1]/Math.pow(Math.max(d, 0.01), 2);
+
+                // Keep track of the closest source
+                if (d < nearest){
+                    nearest = d;
+                }
             }
         }
 
@@ -103,8 +130,6 @@ class vehicle {
         let lighty = toty/(sources.length-1);
         
         let light_dir = [lightx, lighty];
-
-        let avg_dist = totDist/(sources.length - 1);
 
         // Actual assigned change in direction 
         let theta_change = dir_scalar*this.theta_diff(this.dir_cart, light_dir);
@@ -117,9 +142,21 @@ class vehicle {
         // Update cartesian direction
         this.dir_cart = [Math.cos(this.dir_rad), Math.sin(this.dir_rad)];
 
-        // Wiring of 1 speeds up with the magnitude of light_dir, -1 slows down with it
-        let intensity = totDist;
-        let speed = this.wiring[1] === 1 ? speed_scalar*(avg_dist/width) : speed_scalar*(1-avg_dist/width);
+        // How close the nearest source is, from 0 (as far away as possible) to 1 (right on top of us).
+        // With wrapping, the farthest anything can be is half the screen diagonal.
+        let max_dist = Math.sqrt(Math.pow(width/2, 2) + Math.pow(height/2, 2));
+        let closeness = 1 - nearest/max_dist;
+
+        // Wiring of 1 goes faster when closer to light, -1 goes slower when closer to light
+        let speed;
+        if (this.wiring[1] === 1){
+            speed = speed_scalar*closeness;
+        } else {
+            speed = speed_scalar*(1 - closeness);
+        }
+
+        // Small minimum so no vehicle gets completely stuck
+        speed = Math.max(speed, min_speed);
 
         let changex = speed*this.dir_cart[0];
         let changey = speed*this.dir_cart[1];

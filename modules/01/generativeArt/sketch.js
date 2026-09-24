@@ -7,12 +7,12 @@ const colors = ['#08f14f', '#7c1ddc', '#0a5eef','#1adec6'];
 
 function setup(){
     createCanvas(windowWidth, windowHeight);
-    console.log("windowWidth:", windowWidth, "windowHeight", windowWidth);
+    console.log("windowWidth:", windowWidth, "windowHeight", windowHeight);
     let screen_size = (windowWidth*windowHeight);
     num_vehicles = Math.floor(screen_size/400000) + 4;
     vehicle_size = Math.floor(screen_size/180000) + 50;
     for (let i = 0; i<num_vehicles; i++){
-        num = Math.floor(4 * Math.random());
+        let num = Math.floor(4 * Math.random());
         sources[i] = new vehicle([random(width), random(height)], random(TWO_PI), {wiring: options[num]}, colors[num]);
     }
 
