@@ -1,9 +1,9 @@
 // Where your "setup()" and "draw()" functions live
 const sources = [];
-const num_vehicles = 500;
+const num_vehicles = 25;
 const options = ['aggression', 'love', 'fear', 'explorer'];
 const colors = ['red', 'purple', 'blue','orange'];
-const vehicle_size = 15
+const vehicle_size = 100
 
 
 function setup(){

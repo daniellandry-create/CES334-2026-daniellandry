@@ -7,7 +7,7 @@ const wirings = {
     explorer:       s => [-1, -1]
 }
 
-const speed_scalar = 5;
+const speed_scalar = 25;
 const dir_scalar = 1/50
 
 class vehicle {
