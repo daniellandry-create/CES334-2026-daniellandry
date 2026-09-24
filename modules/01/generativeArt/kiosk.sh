@@ -6,3 +6,5 @@ export WAYLAND_DISPLAY="${WAYLAND_DISPLAY:-wayland-0}"
 
 exec chromium --kiosk --ozone-platform=wayland --noerrdialogs \
   --disable-infobars --no-first-run --password-store=basic "$PAGE"
+
+
