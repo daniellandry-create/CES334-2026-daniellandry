@@ -150,7 +150,7 @@
   <!-- Set the maximum amount of memory in bytes that are permitted for
        allocation requests. -->
   <!-- <policy domain="system" name="max-memory-request" value="256MiB"/> -->
-  <policy domain="delegate" rights="none" pattern="URL" />
-  <policy domain="delegate" rights="none" pattern="HTTPS" />
-  <policy domain="delegate" rights="none" pattern="HTTP" />
+  <policy domain="coder" rights="none" pattern="URL" />
+  <policy domain="coder" rights="none" pattern="HTTPS" />
+  <policy domain="coder" rights="none" pattern="HTTP" />
 </policymap>
