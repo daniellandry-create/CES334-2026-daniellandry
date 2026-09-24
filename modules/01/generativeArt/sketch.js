@@ -18,9 +18,13 @@ function setup(){
 function draw(){
     background(0, 10);
     noStroke();
+    let bad = 0;
     for (let i = 0; i < sources.length; i++){
+        if (!isFinite(sources[i].coords[0]) || !isFinite(sources[i].coords[1])) bad++;
         fill(sources[i].clr);
         circle(sources[i].coords[0], sources[i].coords[1], vehicle_size);
         sources[i].update(sources);
     }
+    if (bad > 0) console.log(bad, "/", sources.length, "vehicles non-finite at frame", frameCount);
+
 }
