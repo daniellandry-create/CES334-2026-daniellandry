@@ -1,17 +1,15 @@
 // Where your "setup()" and "draw()" functions live
 const sources = [];
-let screen_size;
 let num_vehicles;
 let vehicle_size;
 const options = ['aggression', 'love', 'fear', 'explorer'];
 const colors = ['#08f14f', '#7c1ddc', '#0a5eef','#1adec6'];
 
-
 function setup(){
     createCanvas(windowWidth, windowHeight);
     console.log("windowWidth:", windowWidth, "windowHeight", windowWidth);
-    screen_size = (windowWidth*windowHeight);
-    num_vehicles = Math.floor(screen_size/500000) + 4;
+    let screen_size = (windowWidth*windowHeight);
+    num_vehicles = Math.floor(screen_size/400000) + 4;
     vehicle_size = Math.floor(screen_size/180000) + 50;
     for (let i = 0; i<num_vehicles; i++){
         num = Math.floor(4 * Math.random());
