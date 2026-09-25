@@ -3,14 +3,14 @@ const sources = [];
 let num_vehicles;
 let vehicle_size;
 const options = ['aggression', 'love', 'fear', 'explorer'];
-const colors = ['#08f14f', '#7c1ddc', '#0a5eef','#1adec6'];
+const colors = ['#c31d04ff', '#ff48d4ff', '#0040afff','#00755dff'];
 
 function setup(){
     createCanvas(windowWidth, windowHeight);
     console.log("windowWidth:", windowWidth, "windowHeight", windowHeight);
     let screen_size = (windowWidth*windowHeight);
-    num_vehicles = Math.floor(screen_size/400000) + 4;
-    vehicle_size = Math.floor(screen_size/180000) + 50;
+    num_vehicles = Math.floor(windowWidth/100) + 4;
+    vehicle_size = Math.floor(windowWidth/50) + 10;
     for (let i = 0; i<num_vehicles; i++){
         let num = Math.floor(4 * Math.random());
         sources[i] = new vehicle([random(width), random(height)], random(TWO_PI), {wiring: options[num]}, colors[num]);

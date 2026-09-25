@@ -7,7 +7,7 @@ const wirings = {
     explorer:       s => [-1, -1]
 }
 
-const speed_scalar = 10;
+const speed_scalar = 5;
 const min_speed = 0.5;
 const pixels = 10;
 const dir_scalar = 1/75
