@@ -1,0 +1,13 @@
+[Unit]
+Description=Chromium kiosk
+After=graphical.target
+Wants=graphical.target
+
+[Service]
+Type=simple
+User=stu3340
+ExecStart=/home/stu3340/Documents/repos/CES334-2026-daniellandry/modules/01/generativeArt/kiosk.sh
+Restart=on-abort
+
+[Install]
+WantedBy=graphical.target
