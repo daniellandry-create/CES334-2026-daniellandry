@@ -9,11 +9,11 @@ tmpfs /dev/shm tmpfs rw,nosuid,nodev 0 0
 cgroup2 /sys/fs/cgroup cgroup2 rw,nosuid,nodev,noexec,relatime,nsdelegate,memory_recursiveprot 0 0
 none /sys/fs/pstore pstore rw,nosuid,nodev,noexec,relatime 0 0
 bpf /sys/fs/bpf bpf rw,nosuid,nodev,noexec,relatime,mode=700 0 0
-systemd-1 /proc/sys/fs/binfmt_misc autofs rw,relatime,fd=36,pgrp=1,timeout=0,minproto=5,maxproto=5,direct,pipe_ino=1512 0 0
+systemd-1 /proc/sys/fs/binfmt_misc autofs rw,relatime,fd=36,pgrp=1,timeout=0,minproto=5,maxproto=5,direct,pipe_ino=1687 0 0
 mqueue /dev/mqueue mqueue rw,nosuid,nodev,noexec,relatime 0 0
-debugfs /sys/kernel/debug debugfs rw,nosuid,nodev,noexec,relatime 0 0
 tmpfs /run/lock tmpfs rw,nosuid,nodev,noexec,relatime,size=5120k 0 0
 tracefs /sys/kernel/tracing tracefs rw,nosuid,nodev,noexec,relatime 0 0
+debugfs /sys/kernel/debug debugfs rw,nosuid,nodev,noexec,relatime 0 0
 tmpfs /run/credentials/systemd-journald.service tmpfs ro,nosuid,nodev,noexec,relatime,nosymfollow,size=1024k,nr_inodes=1024,mode=700,noswap 0 0
 configfs /sys/kernel/config configfs rw,nosuid,nodev,noexec,relatime 0 0
 fusectl /sys/fs/fuse/connections fusectl rw,nosuid,nodev,noexec,relatime 0 0
