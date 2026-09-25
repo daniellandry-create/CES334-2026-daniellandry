@@ -7,7 +7,7 @@ const wirings = {
     explorer:       s => [-1, -1]
 }
 
-const speed_scalar = 5;
+const speed_scalar = 8;
 const min_speed = 0.5;
 const pixels = 10;
 const dir_scalar = 1/75
@@ -142,10 +142,10 @@ class vehicle {
         // Update cartesian direction
         this.dir_cart = [Math.cos(this.dir_rad), Math.sin(this.dir_rad)];
 
-        // How close the nearest source is, from 0 (as far away as possible) to 1 (right on top of us).
-        // With wrapping, the farthest anything can be is half the screen diagonal.
-        let max_dist = Math.sqrt(Math.pow(width/2, 2) + Math.pow(height/2, 2));
-        let closeness = 1 - nearest/max_dist;
+        // How close the nearest source is, from 0 (out of sight) to 1 (right on top of us).
+        // view_dist is how far a vehicle can "see". Anything farther than this counts as completely far away.
+        let view_dist = width/4;
+        let closeness = 1 - Math.min(nearest, view_dist)/view_dist;
 
         // Wiring of 1 goes faster when closer to light, -1 goes slower when closer to light
         let speed;
