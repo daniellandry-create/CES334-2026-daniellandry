@@ -14,6 +14,9 @@ Each vehicle is wired with one of four behaviors, which controls how it turns an
 | `fear` | no (turns away) | yes |
 | `explorer` | no (turns away) | no (slows down) |
 
+##Link to Video:
+https://youtu.be/YPwGLgxHahY
+
 ## Technical Overview
 
 The sketch is written in JavaScript with p5.js. `setup()` in `sketch.js` creates the canvas and the vehicles, and `draw()` runs every frame, drawing each vehicle as a circle and then calling its `update()` method from `src/vehicle.js`. The background is redrawn each frame with a low alpha value instead of solid black, which is what leaves the fading trails behind the vehicles.
