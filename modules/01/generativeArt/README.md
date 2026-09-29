@@ -14,7 +14,7 @@ Each vehicle is wired with one of four behaviors, which controls how it turns an
 | `fear` | no (turns away) | yes |
 | `explorer` | no (turns away) | no (slows down) |
 
-##Link to Video:
+## Link to Video:
 https://youtu.be/YPwGLgxHahY
 
 ## Technical Overview
