@@ -3,10 +3,10 @@ import serial
 import time
 from esp32_serial import Controller
 
-PAC_LEFT, PAC_RIGHT, PAC_UP, PAC_DOWN = 1, 2, 3, 4
-GHOST_LEFT, GHOST_RIGHT, GHOST_UP, GHOST_DOWN = 5, 6, 7, 8 
-PAC_BUTTON, GHOST_BUTTON = 9, 10
-SWITCH = 11
+PAC_LEFT, PAC_RIGHT, PAC_UP, PAC_DOWN = 0, 1, 2, 3
+GHOST_LEFT, GHOST_RIGHT, GHOST_UP, GHOST_DOWN = 4, 5, 6, 7 
+PAC_BUTTON, GHOST_BUTTON = 8, 9
+SWITCH = 10
 
 pygame.init()
 pygame.display.set_mode((1280, 720))
