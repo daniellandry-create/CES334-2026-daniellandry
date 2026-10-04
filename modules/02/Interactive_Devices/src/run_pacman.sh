@@ -8,4 +8,4 @@ export XDG_RUNTIME_DIR=/run/user/$(id -u)
 export WAYLAND_DISPLAY=wayland-0
 
 # Launch the game (swap in your venv's python if you use one)
-python3 display_test.py
+python3 pacman.py
