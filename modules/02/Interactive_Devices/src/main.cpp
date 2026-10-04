@@ -78,6 +78,6 @@ void loop() {
   //Serial.printf("ButtonP: %d ButtonG: %d\n", digitalRead(buttonP), digitalRead(buttonG));
   // Send state to RPi
   sendState(state);
-  //delay(1000);
+  delay(1000);
 }
 
