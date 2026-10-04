@@ -24,7 +24,6 @@ class Controller:
         
         # Save bytes in serial buffer to class buffer
         self.buffer += self.ser.read(self.ser.in_waiting)
-        print(self.buffer)
 
         *lines, self.buffer = self.buffer.split(b"\n")
 
