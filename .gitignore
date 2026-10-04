@@ -1,3 +1,4 @@
 .DS_Store
 .pio/
 .vscode/
+modules/02/Interactive_Devices/src/__pycache__/esp32_serial.cpython-313.pyc
