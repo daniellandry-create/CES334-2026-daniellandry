@@ -42,6 +42,6 @@ class Controller:
             #self.state = 0
 
     def is_pressed(self, bit):
-        return (self.state & (1 << bit))
+        return ((self.state & (1 << bit)) > 0)
 
 

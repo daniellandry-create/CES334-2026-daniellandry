@@ -59,7 +59,7 @@ void setup() {
 
   // put your setup code here, to run once:
 
-  Serial.begin(9600);
+  Serial.begin(115200);
   pinMode(PAC_X, INPUT);
   pinMode(PAC_Y, INPUT);
   pinMode(GHOST_X, INPUT);
