@@ -8,10 +8,14 @@ class Controller:
     
     def __init__(self, port='/dev/ttyUSB0',baud=115200):
 
+        self.ser = serial.Serial(port, baud, timeout=0)
+
+        self.buffer = b""
+
+        self.state = 0
+
         # clear input buffer 
         self.ser.reset_input_buffer()
-
-        self.ser = serial.Serial(port, baud, timout=0)
 
         self.last_valid = time.monotonic()
         
@@ -20,6 +24,7 @@ class Controller:
         
         # Save bytes in serial buffer to class buffer
         self.buffer += self.ser.read(self.ser.in_waiting)
+        print(self.buffer)
 
         *lines, self.buffer = self.buffer.split(b"\n")
 

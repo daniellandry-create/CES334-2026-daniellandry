@@ -16,9 +16,10 @@ running = True
 test = Controller()
 
 while running:
-    print (test.is_pressed(test, PAC_LEFT))
-    print (test.is_pressed(test, PAC_RIGHT))
-    print (test.is_pressed(test, PAC_BUTTON))
+    test.update()
+    print(test.is_pressed(PAC_LEFT))
+    print(test.is_pressed(PAC_RIGHT))
+    print(test.is_pressed(PAC_BUTTON))
     time.sleep(1)
 
 
