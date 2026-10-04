@@ -19,7 +19,8 @@ while running:
     test.update()
     print(test.is_pressed(PAC_LEFT))
     print(test.is_pressed(PAC_RIGHT))
-    print(test.is_pressed(PAC_BUTTON))
+    print(test.is_pressed(PAC_UP))
+    print(test.is_pressed(PAC_DOWN))
     time.sleep(1)
 
 
