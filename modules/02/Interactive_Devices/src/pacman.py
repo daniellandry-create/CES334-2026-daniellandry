@@ -9,9 +9,11 @@ PLAYER1_LEFT, PLAYER1_RIGHT, PLAYER1_UP, PLAYER1_DOWN = 0, 1, 2, 3
 PLAYER2_LEFT, PLAYER2_RIGHT, PLAYER2_UP, PLAYER2_DOWN = 4, 5, 6, 7 
 PLAYER1_BUTTON, PLAYER2_BUTTON = 8, 9
 
-# Each player's inputs as (left, right, up, down, button)
+# Each player's inputs as on-screen (left, right, up, down, button).
+# Player 1 sits at the bottom of the screen, player 2 at the top facing them,
+# so player 2's joystick is reversed: their left is the screen's right, their up is the screen's down.
 PLAYER1_CONTROLS = (PLAYER1_LEFT, PLAYER1_RIGHT, PLAYER1_UP, PLAYER1_DOWN, PLAYER1_BUTTON)
-PLAYER2_CONTROLS = (PLAYER2_LEFT, PLAYER2_RIGHT, PLAYER2_UP, PLAYER2_DOWN, PLAYER2_BUTTON)
+PLAYER2_CONTROLS = (PLAYER2_RIGHT, PLAYER2_LEFT, PLAYER2_DOWN, PLAYER2_UP, PLAYER2_BUTTON)
 SWITCH = 10
 
 
@@ -120,9 +122,16 @@ def press_any_button(inputs):
     return inputs.just_pressed(PLAYER1_BUTTON) or inputs.just_pressed(PLAYER2_BUTTON)
 
 
-def draw_centered(screen, font, text, color, dy=0):
-    surf = font.render(text, True, color)
-    screen.blit(surf, surf.get_rect(center=(screen.get_width() // 2, screen.get_height() // 2 + dy)))
+def draw_for_both(screen, font, color, dy, text_p1, text_p2=None, bg=None):
+    # Player 1 (bottom) reads text_p1 dy pixels below the center line.
+    # Player 2 (top) reads text_p2 rotated 180 degrees, dy pixels above the center line.
+    if text_p2 is None:
+        text_p2 = text_p1
+    cx, cy = screen.get_width() // 2, screen.get_height() // 2
+    surf_p1 = font.render(text_p1, True, color, bg)
+    surf_p2 = pygame.transform.rotate(font.render(text_p2, True, color, bg), 180)
+    screen.blit(surf_p1, surf_p1.get_rect(center=(cx, cy + dy)))
+    screen.blit(surf_p2, surf_p2.get_rect(center=(cx, cy - dy)))
 
 
 class MainMenu(Scene):
@@ -137,8 +146,8 @@ class MainMenu(Scene):
 
     def draw(self, screen):
         screen.fill("black")
-        draw_centered(screen, self.title_font, "PAC-MAN", "yellow", -60)
-        draw_centered(screen, self.prompt_font, "Press any button to start", "white", 40)
+        draw_for_both(screen, self.title_font, "yellow", 70, "PAC-MAN")
+        draw_for_both(screen, self.prompt_font, "white", 160, "Press any button to start")
 
 
 class Gameplay(Scene):
@@ -157,8 +166,8 @@ class Gameplay(Scene):
         self.pac_controls = controls[self.pac_player]
         self.ghost_controls = controls[self.ghost_player]
 
-        self.round_font = pygame.font.Font(None, 96)
-        self.small_font = pygame.font.Font(None, 48)
+        self.round_font = pygame.font.Font(None, 72)
+        self.small_font = pygame.font.Font(None, 40)
         self.hud_font = pygame.font.Font(None, 32)
 
         # Player hitboxes
@@ -193,10 +202,10 @@ class Gameplay(Scene):
                 break
         self.dot_time = now
 
-    def end_round(self, winner, message):
+    def end_round(self, winner):
         scores = self.scores.copy()
         scores[winner] += 1
-        return RoundOver(self.round_num, scores, message)
+        return RoundOver(self.round_num, scores, winner)
 
     def update(self, inputs):
         now = time.monotonic()
@@ -233,19 +242,19 @@ class Gameplay(Scene):
                 if rect.colliderect(self.dot):
                     self.dots[player] += 1
                     if self.dots[player] >= DOTS_TO_WIN:
-                        return self.end_round(player, f"Player {player + 1} collected {DOTS_TO_WIN} dots first!")
+                        return self.end_round(player)
                     self.spawn_dot(now)
                     break
         else:
             # Ghost caught Pacman: ghost's player wins the round
             if self.pacman.colliderect(self.ghost):
-                return self.end_round(self.ghost_player, f"Player {self.ghost_player + 1} (Ghost) caught Pac-Man!")
+                return self.end_round(self.ghost_player)
 
             # Pacman collected a dot: count it and move the dot
             if self.pacman.colliderect(self.dot):
                 self.dots[self.pac_player] += 1
                 if self.dots[self.pac_player] >= DOTS_TO_WIN:
-                    return self.end_round(self.pac_player, f"Player {self.pac_player + 1} (Pac-Man) collected {DOTS_TO_WIN} dots!")
+                    return self.end_round(self.pac_player)
                 self.spawn_dot(now)
 
         # Dot moves on its own if it hasn't been collected in time
@@ -254,7 +263,7 @@ class Gameplay(Scene):
 
         # Timer ran out: ghost's player wins the round (no timer in sudden death)
         if not self.sudden_death and now - self.start_time >= ROUND_TIME:
-            return self.end_round(self.ghost_player, f"Time's up! Player {self.ghost_player + 1} (Ghost) wins the round!")
+            return self.end_round(self.ghost_player)
         return self
 
     def draw(self, screen):
@@ -266,31 +275,38 @@ class Gameplay(Scene):
         pygame.draw.circle(screen, "yellow", self.pacman.center, PLAYER_RADIUS) # Pacman
         pygame.draw.circle(screen, "red", self.ghost.center, PLAYER_RADIUS) # Ghost
 
-        # Text sits in the open middle rows of the maze
+        # Each line is drawn twice: upright for player 1 (bottom), upside down for player 2 (top)
         now = time.monotonic()
         if now < self.start_time:
+            # Intro covers the middle of the map, so give the text a black background
             if self.sudden_death:
-                draw_centered(screen, self.round_font, "Sudden Death!", "cyan", -20)
-                draw_centered(screen, self.small_font, f"First to {DOTS_TO_WIN} dots wins", "yellow", 30)
+                draw_for_both(screen, self.round_font, "cyan", 45, "Sudden Death!", bg="black")
+                draw_for_both(screen, self.small_font, "yellow", 100, f"First to {DOTS_TO_WIN} dots wins", bg="black")
             else:
-                draw_centered(screen, self.round_font, f"Round {self.round_num} of {NUM_ROUNDS}", "cyan", -20)
-                draw_centered(screen, self.small_font, f"Player {self.pac_player + 1} is Pac-Man", "yellow", 30)
+                roles = ["You are the Ghost", "You are the Ghost"]
+                roles[self.pac_player] = "You are Pac-Man"
+                draw_for_both(screen, self.round_font, "cyan", 45, f"Round {self.round_num} of {NUM_ROUNDS}", bg="black")
+                draw_for_both(screen, self.small_font, "yellow", 100, *roles, bg="black")
         elif self.sudden_death:
+            # HUD sits in the open middle rows of the maze
             p1, p2 = self.dots
-            draw_centered(screen, self.hud_font, f"P1: {p1}/{DOTS_TO_WIN}    P2: {p2}/{DOTS_TO_WIN}", "cyan", 0)
+            draw_for_both(screen, self.hud_font, "cyan", 20,
+                          f"You: {p1}/{DOTS_TO_WIN}    Rival: {p2}/{DOTS_TO_WIN}",
+                          f"You: {p2}/{DOTS_TO_WIN}    Rival: {p1}/{DOTS_TO_WIN}")
         else:
             time_left = max(0, int(ROUND_TIME - (now - self.start_time) + 0.999))  # Round up so 0:00 shows at the end
             minutes, seconds = divmod(time_left, 60)
-            draw_centered(screen, self.hud_font, f"{minutes}:{seconds:02d}    Dots: {self.dots[self.pac_player]}/{DOTS_TO_WIN}", "cyan", 0)
+            draw_for_both(screen, self.hud_font, "cyan", 20, f"{minutes}:{seconds:02d}    Dots: {self.dots[self.pac_player]}/{DOTS_TO_WIN}")
 
 
 class RoundOver(Scene):
-    def __init__(self, round_num, scores, message):
+    def __init__(self, round_num, scores, round_winner):
         self.round_num = round_num
         self.scores = scores
-        self.message = message
-        self.big_font = pygame.font.Font(None, 96)
+        self.round_winner = round_winner  # 0 = player 1, 1 = player 2
+        self.big_font = pygame.font.Font(None, 80)
         self.small_font = pygame.font.Font(None, 48)
+        self.prompt_font = pygame.font.Font(None, 36)
 
         # Game ends as soon as someone reaches ROUND_WINS_NEEDED.
         # A 3-3 tie after the last regular round goes to sudden death, whose winner reaches 4.
@@ -306,18 +322,21 @@ class RoundOver(Scene):
     def draw(self, screen):
         screen.fill("black")
         p1, p2 = self.scores
+        # Headline from each player's point of view: [player 1's text, player 2's text]
         if self.game_over:
-            draw_centered(screen, self.big_font, f"Player {1 if p1 > p2 else 2} wins!", "cyan", -100)
+            headline = ["You lose", "You lose"]
+            headline[self.round_winner] = "You win!"
             prompt = "Press any button to return to the menu"
         elif self.round_num == NUM_ROUNDS:
-            draw_centered(screen, self.big_font, "It's a tie!", "cyan", -100)
+            headline = ["It's a tie!", "It's a tie!"]
             prompt = "Press any button for sudden death"
         else:
-            draw_centered(screen, self.big_font, f"Round {self.round_num} over", "cyan", -100)
+            headline = [f"You lost round {self.round_num}"] * 2
+            headline[self.round_winner] = f"You won round {self.round_num}!"
             prompt = "Press any button for the next round"
-        draw_centered(screen, self.small_font, self.message, "white", -20)
-        draw_centered(screen, self.small_font, f"Player 1: {p1}    Player 2: {p2}", "yellow", 40)
-        draw_centered(screen, self.small_font, prompt, "white", 120)
+        draw_for_both(screen, self.big_font, "cyan", 60, *headline)
+        draw_for_both(screen, self.small_font, "yellow", 135, f"You: {p1}    Opponent: {p2}", f"You: {p2}    Opponent: {p1}")
+        draw_for_both(screen, self.prompt_font, "white", 200, prompt)
 
 
 scene = MainMenu()
