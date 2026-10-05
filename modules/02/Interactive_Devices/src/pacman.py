@@ -27,17 +27,15 @@ speed_scalar_P = 1
 speed_scalar_G = 1
 
 # Power-ups variables and constants
-POWER_COOLDOWN = 10
+POWER_COOLDOWN = 5
 POWER_ACTIVE = 3
 active_P = False
 active_G = False
 
 
 # Keeps track of times when players used their power ups
-power_stop_P = time.monotonic()
-power_start_P = time.monotonic()
-power_stop_G = time.monotonic()
-power_start_G = time.monotonic()
+last_power_P = time.monotonic()
+last_power_G = time.monotonic()
 
 
 # Initialize hardware input controller
@@ -57,26 +55,24 @@ while running:
             running = False
     
     # Power up for pacman (slows down Ghost)
-    if inputs.is_pressed(PAC_BUTTON) & (time.monotonic() - power_stop_P > POWER_COOLDOWN):
+    if inputs.is_pressed(PAC_BUTTON) & (time.monotonic() - (last_power_P + POWER_ACTIVE) > POWER_COOLDOWN):
         active_P = True
         speed_scalar_G = SLOW_DOWN
-        power_start_P = time.monotonic()
+        last_power_p = time.monotonic()
 
-    if active_P == True & (time.monotonic() - power_start_P > POWER_ACTIVE):
+    if active_P == True & (time.monotonic() - last_power_P > POWER_ACTIVE):
         active_P = False
         speed_scalar_G = 1
-        power_stop_P = time.monotonic()
 
     # Power up for Ghost (slows down Pacman)
-    if inputs.is_pressed(GHOST_BUTTON) & (time.monotonic() - power_stop_G > POWER_COOLDOWN):
+    if inputs.is_pressed(GHOST_BUTTON) & (time.monotonic() - (last_power_G + POWER_ACTIVE) > POWER_COOLDOWN):
         active_G = True
         speed_scalar_P = SLOW_DOWN
-        power_start_G = time.monotonic()
+        last_power_G = time.monotonic()
 
-    if active_G == True & (time.monotonic() - power_start_G > POWER_ACTIVE):
+    if active_G == True & (time.monotonic() - last_power_G > POWER_ACTIVE):
         active_G = False
         speed_scalar_P = 1
-        power_stop_G = time.monotonic()
 
 
     # Calculate Pacman position
