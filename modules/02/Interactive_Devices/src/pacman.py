@@ -32,6 +32,7 @@ POWER_ACTIVE = 3
 
 # Round variables and constants
 NUM_ROUNDS = 6      # Players swap characters every round, so each plays each 3 times
+SUDDEN_DEATH_ROUND = NUM_ROUNDS + 1  # Only played if the score is tied after NUM_ROUNDS
 ROUND_TIME = 90     # Pacman must collect DOTS_TO_WIN dots before this many seconds run out
 INTRO_TIME = 2      # Seconds to show "Round N" before players can move
 
@@ -104,6 +105,11 @@ class Scene:
         pass
 
 
+def power_on(inputs):
+    # Switch simulates the power button. Flip the 'not' if your switch is wired the other way.
+    return not inputs.is_pressed(SWITCH)
+
+
 def press_any_button(inputs):
     return inputs.just_pressed(PLAYER1_BUTTON) or inputs.just_pressed(PLAYER2_BUTTON)
 
@@ -133,6 +139,8 @@ class Gameplay(Scene):
     def __init__(self, round_num, scores):
         self.round_num = round_num
         self.scores = scores  # [player 1 score, player 2 score]
+        # Sudden death: no catching, no timer, first player to DOTS_TO_WIN dots wins
+        self.sudden_death = round_num == SUDDEN_DEATH_ROUND
 
         # Odd rounds: player 1 is Pacman. Even rounds: player 2 is Pacman.
         if round_num % 2 == 1:
@@ -166,17 +174,17 @@ class Gameplay(Scene):
         # Round clock starts after the intro
         self.start_time = time.monotonic() + INTRO_TIME
 
-        # Dot Pacman is hunting for
-        self.dots_collected = 0
+        # Dot Pacman is hunting for (ghost hunts it too in sudden death)
+        self.dots = [0, 0]  # Dots collected by [player 1, player 2]
         self.dot = pygame.Rect(0, 0, 2*DOT_RADIUS, 2*DOT_RADIUS)
         self.spawn_dot(self.start_time)
 
     def spawn_dot(self, now):
-        # Center of a random open tile, so the dot never touches a wall. Not on top of Pacman or its old spot.
+        # Center of a random open tile, so the dot never touches a wall. Not on top of a player or its old spot.
         old_center = self.dot.center
         while True:
             self.dot.center = tile_center(*random.choice(open_tiles))
-            if not self.dot.colliderect(self.pacman) and self.dot.center != old_center:
+            if self.dot.collidelist([self.pacman, self.ghost]) == -1 and self.dot.center != old_center:
                 break
         self.dot_time = now
 
@@ -216,23 +224,33 @@ class Gameplay(Scene):
         move(self.pacman, *joystick_delta(*self.pac_controls[:4], self.speed_scalar_P), walls)
         move(self.ghost, *joystick_delta(*self.ghost_controls[:4], self.speed_scalar_G), walls)
 
-        # Ghost caught Pacman: ghost's player wins the round
-        if self.pacman.colliderect(self.ghost):
-            return self.end_round(self.ghost_player, f"Player {self.ghost_player + 1} (Ghost) caught Pac-Man!")
+        if self.sudden_death:
+            # Both players race for the dot; they pass through each other
+            for player, rect in ((self.pac_player, self.pacman), (self.ghost_player, self.ghost)):
+                if rect.colliderect(self.dot):
+                    self.dots[player] += 1
+                    if self.dots[player] >= DOTS_TO_WIN:
+                        return self.end_round(player, f"Player {player + 1} collected {DOTS_TO_WIN} dots first!")
+                    self.spawn_dot(now)
+                    break
+        else:
+            # Ghost caught Pacman: ghost's player wins the round
+            if self.pacman.colliderect(self.ghost):
+                return self.end_round(self.ghost_player, f"Player {self.ghost_player + 1} (Ghost) caught Pac-Man!")
 
-        # Pacman collected a dot: count it and move the dot
-        if self.pacman.colliderect(self.dot):
-            self.dots_collected += 1
-            if self.dots_collected >= DOTS_TO_WIN:
-                return self.end_round(self.pac_player, f"Player {self.pac_player + 1} (Pac-Man) collected {DOTS_TO_WIN} dots!")
-            self.spawn_dot(now)
+            # Pacman collected a dot: count it and move the dot
+            if self.pacman.colliderect(self.dot):
+                self.dots[self.pac_player] += 1
+                if self.dots[self.pac_player] >= DOTS_TO_WIN:
+                    return self.end_round(self.pac_player, f"Player {self.pac_player + 1} (Pac-Man) collected {DOTS_TO_WIN} dots!")
+                self.spawn_dot(now)
 
         # Dot moves on its own if it hasn't been collected in time
         if now - self.dot_time >= DOT_MOVE_TIME:
             self.spawn_dot(now)
 
-        # Timer ran out: ghost's player wins the round
-        if now - self.start_time >= ROUND_TIME:
+        # Timer ran out: ghost's player wins the round (no timer in sudden death)
+        if not self.sudden_death and now - self.start_time >= ROUND_TIME:
             return self.end_round(self.ghost_player, f"Time's up! Player {self.ghost_player + 1} (Ghost) wins the round!")
         return self
 
@@ -248,12 +266,19 @@ class Gameplay(Scene):
         # Text sits in the open middle rows of the maze
         now = time.monotonic()
         if now < self.start_time:
-            draw_centered(screen, self.round_font, f"Round {self.round_num} of {NUM_ROUNDS}", "cyan", -20)
-            draw_centered(screen, self.small_font, f"Player {self.pac_player + 1} is Pac-Man", "yellow", 30)
+            if self.sudden_death:
+                draw_centered(screen, self.round_font, "Sudden Death!", "cyan", -20)
+                draw_centered(screen, self.small_font, f"First to {DOTS_TO_WIN} dots wins", "yellow", 30)
+            else:
+                draw_centered(screen, self.round_font, f"Round {self.round_num} of {NUM_ROUNDS}", "cyan", -20)
+                draw_centered(screen, self.small_font, f"Player {self.pac_player + 1} is Pac-Man", "yellow", 30)
+        elif self.sudden_death:
+            p1, p2 = self.dots
+            draw_centered(screen, self.hud_font, f"P1: {p1}/{DOTS_TO_WIN}    P2: {p2}/{DOTS_TO_WIN}", "cyan", 0)
         else:
             time_left = max(0, int(ROUND_TIME - (now - self.start_time) + 0.999))  # Round up so 0:00 shows at the end
             minutes, seconds = divmod(time_left, 60)
-            draw_centered(screen, self.hud_font, f"{minutes}:{seconds:02d}    Dots: {self.dots_collected}/{DOTS_TO_WIN}", "cyan", 0)
+            draw_centered(screen, self.hud_font, f"{minutes}:{seconds:02d}    Dots: {self.dots[self.pac_player]}/{DOTS_TO_WIN}", "cyan", 0)
 
 
 class RoundOver(Scene):
@@ -264,23 +289,29 @@ class RoundOver(Scene):
         self.big_font = pygame.font.Font(None, 96)
         self.small_font = pygame.font.Font(None, 48)
 
+        # Game ends after the last regular round, unless it's tied (then sudden death)
+        p1, p2 = scores
+        self.game_over = round_num >= SUDDEN_DEATH_ROUND or (round_num == NUM_ROUNDS and p1 != p2)
+
     def update(self, inputs):
         if press_any_button(inputs):
-            if self.round_num < NUM_ROUNDS:
-                return Gameplay(self.round_num + 1, self.scores)
-            return MainMenu()
+            if self.game_over:
+                return MainMenu()
+            return Gameplay(self.round_num + 1, self.scores)
         return self
 
     def draw(self, screen):
         screen.fill("black")
         p1, p2 = self.scores
-        if self.round_num < NUM_ROUNDS:
+        if self.game_over:
+            draw_centered(screen, self.big_font, f"Player {1 if p1 > p2 else 2} wins!", "cyan", -100)
+            prompt = "Press any button to return to the menu"
+        elif self.round_num == NUM_ROUNDS:
+            draw_centered(screen, self.big_font, "It's a tie!", "cyan", -100)
+            prompt = "Press any button for sudden death"
+        else:
             draw_centered(screen, self.big_font, f"Round {self.round_num} over", "cyan", -100)
             prompt = "Press any button for the next round"
-        else:
-            winner = "It's a tie!" if p1 == p2 else f"Player {1 if p1 > p2 else 2} wins!"
-            draw_centered(screen, self.big_font, winner, "cyan", -100)
-            prompt = "Press any button to return to the menu"
         draw_centered(screen, self.small_font, self.message, "white", -20)
         draw_centered(screen, self.small_font, f"Player 1: {p1}    Player 2: {p2}", "yellow", 40)
         draw_centered(screen, self.small_font, prompt, "white", 120)
@@ -294,8 +325,15 @@ while running:
         if event.type == pygame.QUIT:
             running = False
 
-    scene = scene.update(inputs)
-    scene.draw(screen)
+    # Switch off: black screen, game frozen. Switching back on restarts like a real power cycle.
+    if not power_on(inputs):
+        screen.fill("black")
+        scene = None
+    else:
+        if scene is None:
+            scene = MainMenu()
+        scene = scene.update(inputs)
+        scene.draw(screen)
 
     pygame.display.flip()
 
