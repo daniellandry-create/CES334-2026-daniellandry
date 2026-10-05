@@ -37,8 +37,8 @@ class Controller:
                 self.last_valid = time.monotonic()
                 break
 
-        #if time.monotonic() - self.last_valid > 0.2:
-            #self.state = 0
+        if time.monotonic() - self.last_valid > 0.2:
+            self.state = 0
 
     def is_pressed(self, bit):
         return ((self.state & (1 << bit)) > 0)

@@ -9,6 +9,7 @@ GHOST_LEFT, GHOST_RIGHT, GHOST_UP, GHOST_DOWN = 4, 5, 6, 7
 PAC_BUTTON, GHOST_BUTTON = 8, 9
 SWITCH = 10
 
+
 # Unit size of wall
 
 
@@ -18,6 +19,25 @@ screen = pygame.display.set_mode((0, 0), pygame.FULLSCREEN) # Scren dimensions a
 pygame.mouse.set_visible(False)
 clock = pygame.time.Clock()
 running = True
+
+# Speed variables and constants
+SLOW_DOWN = .5
+DEFAULT_SPEED = 4
+speed_scalar_P = 1
+speed_scalar_G = 1
+
+# Power-ups variables and constants
+POWER_COOLDOWN = 10
+POWER_ACTIVE = 3
+active_P = False
+active_G = False
+
+
+# Keeps track of times when players used their power ups
+power_stop_P = time.monotonic()
+power_start_P = time.monotonic()
+power_stop_G = time.monotonic()
+power_start_G = time.monotonic()
 
 
 # Initialize hardware input controller
@@ -29,8 +49,6 @@ print(screen.get_height())
 pacman_pos = pygame.Vector2(screen.get_width() / 2, screen.get_height() / 2)
 ghost_pos = pygame.Vector2(screen.get_width() / 2, screen.get_height() / 2)
 
-# For ghost slow-down power
-speed_scalar = 1
 
 while running:
     inputs.update()
@@ -38,28 +56,48 @@ while running:
         if event.type == pygame.QUIT:
             running = False
     
-     #if inputs.is_pressed(PAC_BUTTON):
+    # Power up for pacman (slows down Ghost)
+    if inputs.is_pressed(PAC_BUTTON) & (time.monotonic() - power_stop_P > POWER_COOLDOWN):
+        active_P = True
+        speed_scalar_G = SLOW_DOWN
+        power_start_P = time.monotonic()
+
+    if active_P == True & (time.monotonic() - power_start_P > POWER_ACTIVE):
+        active_P = False
+        speed_scalar_G = 1
+        power_stop_P = time.monotonic()
+
+    # Power up for Ghost (slows down Pacman)
+    if inputs.is_pressed(GHOST_BUTTON) & (time.monotonic() - power_stop_G > POWER_COOLDOWN):
+        active_G = True
+        speed_scalar_P = SLOW_DOWN
+        power_start_G = time.monotonic()
+
+    if active_G == True & (time.monotonic() - power_start_G > POWER_ACTIVE):
+        active_G = False
+        speed_scalar_P = 1
+        power_stop_G = time.monotonic()
 
 
     # Calculate Pacman position
     if inputs.is_pressed(PAC_LEFT):
-        pacman_pos.x -= 2 * speed_scalar
+        pacman_pos.x -= DEFAULT_SPEED * speed_scalar_P
     if inputs.is_pressed(PAC_RIGHT):
-        pacman_pos.x += 2 * speed_scalar
+        pacman_pos.x += DEFAULT_SPEED * speed_scalar_P
     if inputs.is_pressed(PAC_UP):
-        pacman_pos.y -= 2 * speed_scalar
+        pacman_pos.y -= DEFAULT_SPEED * speed_scalar_P
     if inputs.is_pressed(PAC_DOWN):
-        pacman_pos.y += 2 * speed_scalar
+        pacman_pos.y += DEFAULT_SPEED * speed_scalar_P
 
     # Calculate ghost position
     if inputs.is_pressed(GHOST_LEFT):
-        ghost_pos.x -= 2 * speed_scalar
+        ghost_pos.x -= DEFAULT_SPEED * speed_scalar_G
     if inputs.is_pressed(GHOST_RIGHT):
-        ghost_pos.x += 2 * speed_scalar
+        ghost_pos.x += DEFAULT_SPEED * speed_scalar_G
     if inputs.is_pressed(GHOST_UP):
-        ghost_pos.y -= 2 * speed_scalar
+        ghost_pos.y -= DEFAULT_SPEED * speed_scalar_G
     if inputs.is_pressed(GHOST_DOWN):
-        ghost_pos.y += 2 * speed_scalar
+        ghost_pos.y += DEFAULT_SPEED * speed_scalar_G
 
     # Draw players and map
     screen.fill("black")
