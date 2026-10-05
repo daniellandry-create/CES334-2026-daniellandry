@@ -10,9 +10,6 @@ PAC_BUTTON, GHOST_BUTTON = 8, 9
 SWITCH = 10
 
 
-# Unit size of wall
-
-
 # Initialize game
 pygame.init()
 screen = pygame.display.set_mode((0, 0), pygame.FULLSCREEN) # Scren dimensions are 1280x720
@@ -23,19 +20,10 @@ running = True
 # Speed variables and constants
 SLOW_DOWN = .5
 DEFAULT_SPEED = 4
-speed_scalar_P = 1
-speed_scalar_G = 1
 
 # Power-ups variables and constants
 POWER_COOLDOWN = 5
 POWER_ACTIVE = 3
-active_P = False
-active_G = False
-
-
-# Keeps track of times when players used their power ups (start ready to use)
-last_power_P = time.monotonic() - (POWER_ACTIVE + POWER_COOLDOWN)
-last_power_G = time.monotonic() - (POWER_ACTIVE + POWER_COOLDOWN)
 
 
 # Initialize hardware input controller
@@ -47,12 +35,12 @@ walls = [pygame.Rect(MAP_OFFSET_X + j*BLOCK_SIZE, MAP_OFFSET_Y + i*BLOCK_SIZE, B
 MAP_W = len(map[0]) * BLOCK_SIZE
 MAP_H = len(map) * BLOCK_SIZE
 
-# Player hitboxes (drawn as circles of radius 15)
+# Players are drawn as circles with a square hitbox
 PLAYER_RADIUS = 15
-pacman = pygame.Rect(0, 0, 2*PLAYER_RADIUS, 2*PLAYER_RADIUS)
-ghost = pygame.Rect(0, 0, 2*PLAYER_RADIUS, 2*PLAYER_RADIUS)
-pacman.center = (MAP_OFFSET_X + 16*BLOCK_SIZE + BLOCK_SIZE//2, MAP_OFFSET_Y + 8*BLOCK_SIZE + BLOCK_SIZE//2)
-ghost.center = (MAP_OFFSET_X + 15*BLOCK_SIZE + BLOCK_SIZE//2, MAP_OFFSET_Y + 9*BLOCK_SIZE + BLOCK_SIZE//2)
+
+
+def tile_center(row, col):
+    return (MAP_OFFSET_X + col*BLOCK_SIZE + BLOCK_SIZE//2, MAP_OFFSET_Y + row*BLOCK_SIZE + BLOCK_SIZE//2)
 
 
 def move(rect, dx, dy, walls):
@@ -88,48 +76,104 @@ def joystick_delta(left, right, up, down, speed):
     return dx, dy
 
 
+class Scene:
+    # Base class for a screen. update() returns the scene to show next frame.
+    def update(self, inputs):
+        return self
+
+    def draw(self, screen):
+        pass
+
+
+class MainMenu(Scene):
+    def __init__(self):
+        self.title_font = pygame.font.Font(None, 120)
+        self.prompt_font = pygame.font.Font(None, 48)
+
+    def update(self, inputs):
+        if inputs.just_pressed(PAC_BUTTON) or inputs.just_pressed(GHOST_BUTTON):
+            return Gameplay()
+        return self
+
+    def draw(self, screen):
+        screen.fill("black")
+        title = self.title_font.render("PAC-MAN", True, "yellow")
+        prompt = self.prompt_font.render("Press any button to start", True, "white")
+        cx, cy = screen.get_width() // 2, screen.get_height() // 2
+        screen.blit(title, title.get_rect(center=(cx, cy - 60)))
+        screen.blit(prompt, prompt.get_rect(center=(cx, cy + 40)))
+
+
+class Gameplay(Scene):
+    def __init__(self):
+        # Player hitboxes
+        self.pacman = pygame.Rect(0, 0, 2*PLAYER_RADIUS, 2*PLAYER_RADIUS)
+        self.ghost = pygame.Rect(0, 0, 2*PLAYER_RADIUS, 2*PLAYER_RADIUS)
+        self.pacman.center = tile_center(16, 1)  # Bottom-left corner
+        self.ghost.center = tile_center(1, 30)   # Top-right corner
+
+        # Speed and power-up state
+        self.speed_scalar_P = 1
+        self.speed_scalar_G = 1
+        self.active_P = False
+        self.active_G = False
+
+        # Keeps track of times when players used their power ups (start ready to use)
+        self.last_power_P = time.monotonic() - (POWER_ACTIVE + POWER_COOLDOWN)
+        self.last_power_G = time.monotonic() - (POWER_ACTIVE + POWER_COOLDOWN)
+
+    def update(self, inputs):
+        now = time.monotonic()
+
+        # Power up for pacman (slows down Ghost)
+        if inputs.just_pressed(PAC_BUTTON) and (now - (self.last_power_P + POWER_ACTIVE) > POWER_COOLDOWN):
+            self.active_P = True
+            self.speed_scalar_G = SLOW_DOWN
+            self.last_power_P = now
+
+        if self.active_P and (now - self.last_power_P > POWER_ACTIVE):
+            self.active_P = False
+            self.speed_scalar_G = 1
+
+        # Power up for Ghost (slows down Pacman)
+        if inputs.just_pressed(GHOST_BUTTON) and (now - (self.last_power_G + POWER_ACTIVE) > POWER_COOLDOWN):
+            self.active_G = True
+            self.speed_scalar_P = SLOW_DOWN
+            self.last_power_G = now
+
+        if self.active_G and (now - self.last_power_G > POWER_ACTIVE):
+            self.active_G = False
+            self.speed_scalar_P = 1
+
+        # Move players, blocked by walls
+        move(self.pacman, *joystick_delta(PAC_LEFT, PAC_RIGHT, PAC_UP, PAC_DOWN, self.speed_scalar_P), walls)
+        move(self.ghost, *joystick_delta(GHOST_LEFT, GHOST_RIGHT, GHOST_UP, GHOST_DOWN, self.speed_scalar_G), walls)
+
+        # Ghost caught Pacman: back to the home screen
+        if self.pacman.colliderect(self.ghost):
+            return MainMenu()
+        return self
+
+    def draw(self, screen):
+        screen.fill("black")
+        for wall in walls:
+            pygame.draw.rect(screen, "white", wall)
+
+        pygame.draw.circle(screen, "yellow", self.pacman.center, PLAYER_RADIUS) # Pacman
+        pygame.draw.circle(screen, "red", self.ghost.center, PLAYER_RADIUS) # Ghost
+
+
+scene = MainMenu()
+
 while running:
     inputs.update()
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
-    
-    # Power up for pacman (slows down Ghost)
-    if inputs.is_pressed(PAC_BUTTON) and (time.monotonic() - (last_power_P + POWER_ACTIVE) > POWER_COOLDOWN):
-        active_P = True
-        speed_scalar_G = SLOW_DOWN
-        last_power_P = time.monotonic()
 
-    if active_P and (time.monotonic() - last_power_P > POWER_ACTIVE):
-        active_P = False
-        speed_scalar_G = 1
-
-    # Power up for Ghost (slows down Pacman)
-    if inputs.is_pressed(GHOST_BUTTON) and (time.monotonic() - (last_power_G + POWER_ACTIVE) > POWER_COOLDOWN):
-        active_G = True
-        speed_scalar_P = SLOW_DOWN
-        last_power_G = time.monotonic()
-
-    if active_G and (time.monotonic() - last_power_G > POWER_ACTIVE):
-        active_G = False
-        speed_scalar_P = 1
-
-
-    # Move players, blocked by walls
-    move(pacman, *joystick_delta(PAC_LEFT, PAC_RIGHT, PAC_UP, PAC_DOWN, speed_scalar_P), walls)
-    move(ghost, *joystick_delta(GHOST_LEFT, GHOST_RIGHT, GHOST_UP, GHOST_DOWN, speed_scalar_G), walls)
-
-    # Draw players and map
-    screen.fill("black")
-    for wall in walls:
-        pygame.draw.rect(screen, "white", wall)
-
-    pygame.draw.circle(screen, "yellow", pacman.center, PLAYER_RADIUS) # Pacman
-    pygame.draw.circle(screen, "red", ghost.center, PLAYER_RADIUS) # Ghost
-
+    scene = scene.update(inputs)
+    scene.draw(screen)
 
     pygame.display.flip()
 
     clock.tick(60)
-
-

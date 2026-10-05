@@ -16,12 +16,15 @@ class Controller:
         self.buffer = b""
 
         self.state = 0
+        self.prev_state = 0
 
         self.last_valid = time.monotonic()
-        
+
 
     def update(self):
-        
+        # Remember last frame's state so just_pressed() can detect new presses
+        self.prev_state = self.state
+
         # Save bytes in serial buffer to class buffer
         self.buffer += self.ser.read(self.ser.in_waiting)
 
@@ -42,5 +45,9 @@ class Controller:
 
     def is_pressed(self, bit):
         return ((self.state & (1 << bit)) > 0)
+
+    def just_pressed(self, bit):
+        # True only on the frame the input goes from released to pressed
+        return self.is_pressed(bit) and not (self.prev_state & (1 << bit))
 
 
