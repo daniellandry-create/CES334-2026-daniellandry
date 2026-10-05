@@ -33,6 +33,7 @@ POWER_ACTIVE = 3
 # Round variables and constants
 NUM_ROUNDS = 6      # Players swap characters every round, so each plays each 3 times
 SUDDEN_DEATH_ROUND = NUM_ROUNDS + 1  # Only played if the score is tied after NUM_ROUNDS
+ROUND_WINS_NEEDED = 4  # First player to this many round wins takes the game immediately
 ROUND_TIME = 90     # Pacman must collect DOTS_TO_WIN dots before this many seconds run out
 INTRO_TIME = 2      # Seconds to show "Round N" before players can move
 
@@ -63,7 +64,7 @@ def tile_center(row, col):
     return (MAP_OFFSET_X + col*BLOCK_SIZE + BLOCK_SIZE//2, MAP_OFFSET_Y + row*BLOCK_SIZE + BLOCK_SIZE//2)
 
 
-def move(rect, dx, dy, walls):
+def move(rect, dx, dy, walls, wrap=True):
     # Move one axis at a time so players slide along walls instead of sticking
     rect.x += dx
     for i in rect.collidelistall(walls):
@@ -77,6 +78,11 @@ def move(rect, dx, dy, walls):
             rect.bottom = walls[i].top
         elif dy < 0:
             rect.top = walls[i].bottom
+
+    # Screen edges act as walls when wrapping is disabled
+    if not wrap:
+        rect.clamp_ip(pygame.Rect(MAP_OFFSET_X, MAP_OFFSET_Y, MAP_W, MAP_H))
+        return
 
     # Wrap around through the tunnels on the map edges
     if rect.centerx < MAP_OFFSET_X:
@@ -162,7 +168,6 @@ class Gameplay(Scene):
         self.ghost.center = tile_center(1, 30)   # Top-right corner
 
         # Speed and power-up state
-        self.speed_scalar_P = 1
         self.speed_scalar_G = 1
         self.active_P = False
         self.active_G = False
@@ -210,18 +215,16 @@ class Gameplay(Scene):
             self.active_P = False
             self.speed_scalar_G = 1
 
-        # Power up for Ghost (slows down Pacman)
+        # Power up for Ghost (Pacman can't wrap around the map edges)
         if inputs.just_pressed(self.ghost_controls[4]) and (now - (self.last_power_G + POWER_ACTIVE) > POWER_COOLDOWN):
             self.active_G = True
-            self.speed_scalar_P = SLOW_DOWN
             self.last_power_G = now
 
         if self.active_G and (now - self.last_power_G > POWER_ACTIVE):
             self.active_G = False
-            self.speed_scalar_P = 1
 
         # Move players, blocked by walls
-        move(self.pacman, *joystick_delta(*self.pac_controls[:4], self.speed_scalar_P), walls)
+        move(self.pacman, *joystick_delta(*self.pac_controls[:4], 1), walls, wrap=not self.active_G)
         move(self.ghost, *joystick_delta(*self.ghost_controls[:4], self.speed_scalar_G), walls)
 
         if self.sudden_death:
@@ -289,9 +292,9 @@ class RoundOver(Scene):
         self.big_font = pygame.font.Font(None, 96)
         self.small_font = pygame.font.Font(None, 48)
 
-        # Game ends after the last regular round, unless it's tied (then sudden death)
-        p1, p2 = scores
-        self.game_over = round_num >= SUDDEN_DEATH_ROUND or (round_num == NUM_ROUNDS and p1 != p2)
+        # Game ends as soon as someone reaches ROUND_WINS_NEEDED.
+        # A 3-3 tie after the last regular round goes to sudden death, whose winner reaches 4.
+        self.game_over = max(scores) >= ROUND_WINS_NEEDED
 
     def update(self, inputs):
         if press_any_button(inputs):
