@@ -15,7 +15,7 @@ SWITCH = 10
 
 # Initialize game
 pygame.init()
-screen = pygame.display.set_mode((0, 0), pygame.FULLSCREEN) # Scren dimensions are 1024 X 600
+screen = pygame.display.set_mode((0, 0), pygame.FULLSCREEN) # Scren dimensions are 1280x720
 pygame.mouse.set_visible(False)
 clock = pygame.time.Clock()
 running = True
@@ -33,19 +33,59 @@ active_P = False
 active_G = False
 
 
-# Keeps track of times when players used their power ups
-last_power_P = time.monotonic()
-last_power_G = time.monotonic()
+# Keeps track of times when players used their power ups (start ready to use)
+last_power_P = time.monotonic() - (POWER_ACTIVE + POWER_COOLDOWN)
+last_power_G = time.monotonic() - (POWER_ACTIVE + POWER_COOLDOWN)
 
 
 # Initialize hardware input controller
 inputs = Controller()
 
-# Initialize player positions
-print(screen.get_width())
-print(screen.get_height())
-pacman_pos = pygame.Vector2(screen.get_width() / 2, screen.get_height() / 2)
-ghost_pos = pygame.Vector2(screen.get_width() / 2, screen.get_height() / 2)
+# Wall hitboxes, built once from the map
+walls = [pygame.Rect(MAP_OFFSET_X + j*BLOCK_SIZE, MAP_OFFSET_Y + i*BLOCK_SIZE, BLOCK_SIZE, BLOCK_SIZE)
+         for i, row in enumerate(map) for j, v in enumerate(row) if v == 1]
+MAP_W = len(map[0]) * BLOCK_SIZE
+MAP_H = len(map) * BLOCK_SIZE
+
+# Player hitboxes (drawn as circles of radius 15)
+PLAYER_RADIUS = 15
+pacman = pygame.Rect(0, 0, 2*PLAYER_RADIUS, 2*PLAYER_RADIUS)
+ghost = pygame.Rect(0, 0, 2*PLAYER_RADIUS, 2*PLAYER_RADIUS)
+pacman.center = (MAP_OFFSET_X + 16*BLOCK_SIZE + BLOCK_SIZE//2, MAP_OFFSET_Y + 8*BLOCK_SIZE + BLOCK_SIZE//2)
+ghost.center = (MAP_OFFSET_X + 15*BLOCK_SIZE + BLOCK_SIZE//2, MAP_OFFSET_Y + 9*BLOCK_SIZE + BLOCK_SIZE//2)
+
+
+def move(rect, dx, dy, walls):
+    # Move one axis at a time so players slide along walls instead of sticking
+    rect.x += dx
+    for i in rect.collidelistall(walls):
+        if dx > 0:
+            rect.right = walls[i].left
+        elif dx < 0:
+            rect.left = walls[i].right
+    rect.y += dy
+    for i in rect.collidelistall(walls):
+        if dy > 0:
+            rect.bottom = walls[i].top
+        elif dy < 0:
+            rect.top = walls[i].bottom
+
+    # Wrap around through the tunnels on the map edges
+    if rect.centerx < MAP_OFFSET_X:
+        rect.centerx += MAP_W
+    elif rect.centerx >= MAP_OFFSET_X + MAP_W:
+        rect.centerx -= MAP_W
+    if rect.centery < MAP_OFFSET_Y:
+        rect.centery += MAP_H
+    elif rect.centery >= MAP_OFFSET_Y + MAP_H:
+        rect.centery -= MAP_H
+
+
+def joystick_delta(left, right, up, down, speed):
+    step = int(round(DEFAULT_SPEED * speed))
+    dx = (inputs.is_pressed(right) - inputs.is_pressed(left)) * step
+    dy = (inputs.is_pressed(down) - inputs.is_pressed(up)) * step
+    return dx, dy
 
 
 while running:
@@ -55,55 +95,37 @@ while running:
             running = False
     
     # Power up for pacman (slows down Ghost)
-    if inputs.is_pressed(PAC_BUTTON) & (time.monotonic() - (last_power_P + POWER_ACTIVE) > POWER_COOLDOWN):
+    if inputs.is_pressed(PAC_BUTTON) and (time.monotonic() - (last_power_P + POWER_ACTIVE) > POWER_COOLDOWN):
         active_P = True
         speed_scalar_G = SLOW_DOWN
-        last_power_p = time.monotonic()
+        last_power_P = time.monotonic()
 
-    if active_P == True & (time.monotonic() - last_power_P > POWER_ACTIVE):
+    if active_P and (time.monotonic() - last_power_P > POWER_ACTIVE):
         active_P = False
         speed_scalar_G = 1
 
     # Power up for Ghost (slows down Pacman)
-    if inputs.is_pressed(GHOST_BUTTON) & (time.monotonic() - (last_power_G + POWER_ACTIVE) > POWER_COOLDOWN):
+    if inputs.is_pressed(GHOST_BUTTON) and (time.monotonic() - (last_power_G + POWER_ACTIVE) > POWER_COOLDOWN):
         active_G = True
         speed_scalar_P = SLOW_DOWN
         last_power_G = time.monotonic()
 
-    if active_G == True & (time.monotonic() - last_power_G > POWER_ACTIVE):
+    if active_G and (time.monotonic() - last_power_G > POWER_ACTIVE):
         active_G = False
         speed_scalar_P = 1
 
 
-    # Calculate Pacman position
-    if inputs.is_pressed(PAC_LEFT):
-        pacman_pos.x -= DEFAULT_SPEED * speed_scalar_P
-    if inputs.is_pressed(PAC_RIGHT):
-        pacman_pos.x += DEFAULT_SPEED * speed_scalar_P
-    if inputs.is_pressed(PAC_UP):
-        pacman_pos.y -= DEFAULT_SPEED * speed_scalar_P
-    if inputs.is_pressed(PAC_DOWN):
-        pacman_pos.y += DEFAULT_SPEED * speed_scalar_P
-
-    # Calculate ghost position
-    if inputs.is_pressed(GHOST_LEFT):
-        ghost_pos.x -= DEFAULT_SPEED * speed_scalar_G
-    if inputs.is_pressed(GHOST_RIGHT):
-        ghost_pos.x += DEFAULT_SPEED * speed_scalar_G
-    if inputs.is_pressed(GHOST_UP):
-        ghost_pos.y -= DEFAULT_SPEED * speed_scalar_G
-    if inputs.is_pressed(GHOST_DOWN):
-        ghost_pos.y += DEFAULT_SPEED * speed_scalar_G
+    # Move players, blocked by walls
+    move(pacman, *joystick_delta(PAC_LEFT, PAC_RIGHT, PAC_UP, PAC_DOWN, speed_scalar_P), walls)
+    move(ghost, *joystick_delta(GHOST_LEFT, GHOST_RIGHT, GHOST_UP, GHOST_DOWN, speed_scalar_G), walls)
 
     # Draw players and map
     screen.fill("black")
-    for i in range(len(map)):
-        for j in range(len(map[0])):
-            if map[i][j] == 1:
-                pygame.draw.rect(screen, "white", (BLOCK_SIZE*j, BLOCK_SIZE*i, BLOCK_SIZE, BLOCK_SIZE))
+    for wall in walls:
+        pygame.draw.rect(screen, "white", wall)
 
-    pygame.draw.circle(screen, "yellow", pacman_pos, 15) # Pacman
-    pygame.draw.circle(screen, "red", ghost_pos, 15) # Ghost
+    pygame.draw.circle(screen, "yellow", pacman.center, PLAYER_RADIUS) # Pacman
+    pygame.draw.circle(screen, "red", ghost.center, PLAYER_RADIUS) # Ghost
 
 
     pygame.display.flip()
