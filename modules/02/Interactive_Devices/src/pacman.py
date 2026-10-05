@@ -3,7 +3,7 @@ import random
 import serial
 import time
 from esp32_serial import Controller
-from maze_map import map, BLOCK_SIZE, MAP_OFFSET_X, MAP_OFFSET_Y
+from maze_map import random_map, BLOCK_SIZE, MAP_OFFSET_X, MAP_OFFSET_Y, ROWS, COLS
 
 PLAYER1_LEFT, PLAYER1_RIGHT, PLAYER1_UP, PLAYER1_DOWN = 0, 1, 2, 3
 PLAYER2_LEFT, PLAYER2_RIGHT, PLAYER2_UP, PLAYER2_DOWN = 4, 5, 6, 7 
@@ -31,6 +31,7 @@ DEFAULT_SPEED = 4
 # Power-ups variables and constants
 POWER_COOLDOWN = 5
 POWER_ACTIVE = 3
+TIMER_RADIUS = 20
 
 # Round variables and constants
 NUM_ROUNDS = 6      # Players swap characters every round, so each plays each 3 times
@@ -42,21 +43,25 @@ INTRO_TIME = 2      # Seconds to show "Round N" before players can move
 # Dot variables and constants
 DOTS_TO_WIN = 5
 DOT_MOVE_TIME = 10  # Dot jumps to a new spot if not collected within this many seconds
-DOT_RADIUS = 8
+DOT_RADIUS = 10
 
 
 # Initialize hardware input controller
 inputs = Controller()
 
-# Wall hitboxes, built once from the map
-walls = [pygame.Rect(MAP_OFFSET_X + j*BLOCK_SIZE, MAP_OFFSET_Y + i*BLOCK_SIZE, BLOCK_SIZE, BLOCK_SIZE)
-         for i, row in enumerate(map) for j, v in enumerate(row) if v == 1]
-MAP_W = len(map[0]) * BLOCK_SIZE
-MAP_H = len(map) * BLOCK_SIZE
+MAP_W = COLS * BLOCK_SIZE
+MAP_H = ROWS * BLOCK_SIZE
 
-# Open tiles where a dot can spawn (skips the border so dots never sit in the wrap-around tunnels)
-open_tiles = [(i, j) for i, row in enumerate(map) for j, v in enumerate(row)
-              if v == 0 and 0 < i < len(map) - 1 and 0 < j < len(row) - 1]
+
+class Maze:
+    # A new random maze is made for each game and shared by all of its rounds
+    def __init__(self, grid):
+        # Wall hitboxes
+        self.walls = [pygame.Rect(MAP_OFFSET_X + j*BLOCK_SIZE, MAP_OFFSET_Y + i*BLOCK_SIZE, BLOCK_SIZE, BLOCK_SIZE)
+                      for i, row in enumerate(grid) for j, v in enumerate(row) if v == 1]
+        # Open tiles where a dot can spawn (skips the border so dots never sit in the wrap-around tunnels)
+        self.open_tiles = [(i, j) for i, row in enumerate(grid) for j, v in enumerate(row)
+                           if v == 0 and 0 < i < ROWS - 1 and 0 < j < COLS - 1]
 
 # Players are drawn as circles with a square hitbox
 PLAYER_RADIUS = 15
@@ -141,7 +146,7 @@ class MainMenu(Scene):
 
     def update(self, inputs):
         if press_any_button(inputs):
-            return Gameplay(1, [0, 0])
+            return Gameplay(1, [0, 0], Maze(random_map()))
         return self
 
     def draw(self, screen):
@@ -151,9 +156,10 @@ class MainMenu(Scene):
 
 
 class Gameplay(Scene):
-    def __init__(self, round_num, scores):
+    def __init__(self, round_num, scores, maze):
         self.round_num = round_num
         self.scores = scores  # [player 1 score, player 2 score]
+        self.maze = maze
         # Sudden death: no catching, no timer, first player to DOTS_TO_WIN dots wins
         self.sudden_death = round_num == SUDDEN_DEATH_ROUND
 
@@ -162,9 +168,9 @@ class Gameplay(Scene):
             self.pac_player, self.ghost_player = 0, 1
         else:
             self.pac_player, self.ghost_player = 1, 0
-        controls = (PLAYER1_CONTROLS, PLAYER2_CONTROLS)
-        self.pac_controls = controls[self.pac_player]
-        self.ghost_controls = controls[self.ghost_player]
+        self.controls = (PLAYER1_CONTROLS, PLAYER2_CONTROLS)
+        self.pac_controls = self.controls[self.pac_player]
+        self.ghost_controls = self.controls[self.ghost_player]
 
         self.round_font = pygame.font.Font(None, 72)
         self.small_font = pygame.font.Font(None, 40)
@@ -176,14 +182,15 @@ class Gameplay(Scene):
         self.pacman.center = tile_center(16, 1)  # Bottom-left corner
         self.ghost.center = tile_center(1, 30)   # Top-right corner
 
-        # Speed and power-up state
-        self.speed_scalar_G = 1
-        self.active_P = False
-        self.active_G = False
+        # Power-up state per player [player 1, player 2]. What a power-up does depends on
+        # the player's character this round: Pac-Man slows the ghost, the ghost blocks Pac-Man's wrap-around.
+        self.power_active = [False, False]
+        # Times when players used their power ups (start ready to use)
+        self.last_power = [time.monotonic() - (POWER_ACTIVE + POWER_COOLDOWN)] * 2
 
-        # Keeps track of times when players used their power ups (start ready to use)
-        self.last_power_P = time.monotonic() - (POWER_ACTIVE + POWER_COOLDOWN)
-        self.last_power_G = time.monotonic() - (POWER_ACTIVE + POWER_COOLDOWN)
+        # Cooldown icons sit on the border on each player's side (player 1 bottom-left, player 2 top-right from the screen's view)
+        self.icon_centers = [tile_center(ROWS - 2, 0), tile_center(1, COLS - 1)]
+        self.cooldown_font = pygame.font.Font(None, 24)
 
         # Round clock starts after the intro
         self.start_time = time.monotonic() + INTRO_TIME
@@ -197,15 +204,18 @@ class Gameplay(Scene):
         # Center of a random open tile, so the dot never touches a wall. Not on top of a player or its old spot.
         old_center = self.dot.center
         while True:
-            self.dot.center = tile_center(*random.choice(open_tiles))
+            self.dot.center = tile_center(*random.choice(self.maze.open_tiles))
             if self.dot.collidelist([self.pacman, self.ghost]) == -1 and self.dot.center != old_center:
                 break
         self.dot_time = now
 
+    def power_ready(self, player, now):
+        return now - self.last_power[player] >= POWER_ACTIVE + POWER_COOLDOWN
+
     def end_round(self, winner):
         scores = self.scores.copy()
         scores[winner] += 1
-        return RoundOver(self.round_num, scores, winner)
+        return RoundOver(self.round_num, scores, winner, self.maze)
 
     def update(self, inputs):
         now = time.monotonic()
@@ -214,27 +224,21 @@ class Gameplay(Scene):
         if now < self.start_time:
             return self
 
-        # Power up for pacman (slows down Ghost)
-        if inputs.just_pressed(self.pac_controls[4]) and (now - (self.last_power_P + POWER_ACTIVE) > POWER_COOLDOWN):
-            self.active_P = True
-            self.speed_scalar_G = SLOW_DOWN
-            self.last_power_P = now
+        # Power ups: each player's button triggers their current character's ability
+        for player in (0, 1):
+            if inputs.just_pressed(self.controls[player][4]) and self.power_ready(player, now):
+                self.power_active[player] = True
+                self.last_power[player] = now
+            if self.power_active[player] and (now - self.last_power[player] > POWER_ACTIVE):
+                self.power_active[player] = False
 
-        if self.active_P and (now - self.last_power_P > POWER_ACTIVE):
-            self.active_P = False
-            self.speed_scalar_G = 1
-
-        # Power up for Ghost (Pacman can't wrap around the map edges)
-        if inputs.just_pressed(self.ghost_controls[4]) and (now - (self.last_power_G + POWER_ACTIVE) > POWER_COOLDOWN):
-            self.active_G = True
-            self.last_power_G = now
-
-        if self.active_G and (now - self.last_power_G > POWER_ACTIVE):
-            self.active_G = False
+        ghost_speed = SLOW_DOWN if self.power_active[self.pac_player] else 1  # Pac-Man's ability: slow the ghost
+        pac_wrap = not self.power_active[self.ghost_player]                   # Ghost's ability: no wrap-around for Pac-Man
 
         # Move players, blocked by walls
-        move(self.pacman, *joystick_delta(*self.pac_controls[:4], 1), walls, wrap=not self.active_G)
-        move(self.ghost, *joystick_delta(*self.ghost_controls[:4], self.speed_scalar_G), walls)
+        walls = self.maze.walls
+        move(self.pacman, *joystick_delta(*self.pac_controls[:4], 1), walls, wrap=pac_wrap)
+        move(self.ghost, *joystick_delta(*self.ghost_controls[:4], ghost_speed), walls)
 
         if self.sudden_death:
             # Both players race for the dot; they pass through each other
@@ -268,15 +272,24 @@ class Gameplay(Scene):
 
     def draw(self, screen):
         screen.fill("black")
-        for wall in walls:
+        for wall in self.maze.walls:
             pygame.draw.rect(screen, "white", wall)
 
         pygame.draw.circle(screen, "blue", self.dot.center, DOT_RADIUS) # Dot
         pygame.draw.circle(screen, "yellow", self.pacman.center, PLAYER_RADIUS) # Pacman
         pygame.draw.circle(screen, "red", self.ghost.center, PLAYER_RADIUS) # Ghost
 
-        # Each line is drawn twice: upright for player 1 (bottom), upside down for player 2 (top)
+        # Power-up icons: green = ready, red = in use or cooling down. Player 2's label faces them.
         now = time.monotonic()
+        for player, label in ((0, "P1"), (1, "P2")):
+            color = "green" if self.power_ready(player, now) else "red"
+            pygame.draw.circle(screen, color, self.icon_centers[player], TIMER_RADIUS)
+            text = self.cooldown_font.render(label, True, "black")
+            if player == 1:
+                text = pygame.transform.rotate(text, 180)
+            screen.blit(text, text.get_rect(center=self.icon_centers[player]))
+
+        # Each line is drawn twice: upright for player 1 (bottom), upside down for player 2 (top)
         if now < self.start_time:
             # Intro covers the middle of the map, so give the text a black background
             if self.sudden_death:
@@ -300,9 +313,10 @@ class Gameplay(Scene):
 
 
 class RoundOver(Scene):
-    def __init__(self, round_num, scores, round_winner):
+    def __init__(self, round_num, scores, round_winner, maze):
         self.round_num = round_num
         self.scores = scores
+        self.maze = maze
         self.round_winner = round_winner  # 0 = player 1, 1 = player 2
         self.big_font = pygame.font.Font(None, 80)
         self.small_font = pygame.font.Font(None, 48)
@@ -316,7 +330,7 @@ class RoundOver(Scene):
         if press_any_button(inputs):
             if self.game_over:
                 return MainMenu()
-            return Gameplay(self.round_num + 1, self.scores)
+            return Gameplay(self.round_num + 1, self.scores, self.maze)
         return self
 
     def draw(self, screen):
