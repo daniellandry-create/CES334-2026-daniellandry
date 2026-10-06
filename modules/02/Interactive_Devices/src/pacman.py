@@ -179,8 +179,11 @@ class Gameplay(Scene):
         # Player hitboxes
         self.pacman = pygame.Rect(0, 0, 2*PLAYER_RADIUS, 2*PLAYER_RADIUS)
         self.ghost = pygame.Rect(0, 0, 2*PLAYER_RADIUS, 2*PLAYER_RADIUS)
-        self.pacman.center = tile_center(16, 1)  # Bottom-left corner
-        self.ghost.center = tile_center(1, 30)   # Top-right corner
+        # Each player always starts in their own corner, whichever character they are:
+        # player 1 bottom-left (their side), player 2 top-right (their side)
+        spawns = [tile_center(ROWS - 2, 1), tile_center(1, COLS - 2)]
+        self.pacman.center = spawns[self.pac_player]
+        self.ghost.center = spawns[self.ghost_player]
 
         # Power-up state per player [player 1, player 2]. What a power-up does depends on
         # the player's character this round: Pac-Man slows the ghost, the ghost blocks Pac-Man's wrap-around.
