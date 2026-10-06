@@ -1,0 +1,15 @@
+
+[Unit]
+Description= For starting pacman game on boot
+After=graphical.target
+
+[Service]
+Type=simple
+User=stu3340
+ExecStart=/home/stu3340/Documents/repos/CES334-2026-daniellandry/modules/02/Interactive_Devices/src/run_pacman.sh
+Restart=on-abort
+
+[Install]
+WantedBy=graphical.target
+
+
