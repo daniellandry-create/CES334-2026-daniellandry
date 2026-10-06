@@ -1,3 +1,3 @@
 ## Daniel's Raspberry Pi
-Current IP address: `10.67.75.220`
-Last updated: 2026-10-06 14:42:02.467011
+Current IP address: `10.75.69.21`
+Last updated: 2026-10-06 18:58:35.956874
