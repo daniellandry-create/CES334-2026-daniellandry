@@ -64,9 +64,6 @@ void loop() {
   // put your main code here, to run repeatedly:
   // Combine states of joysticks, buttons, and switch into single 16 bit number
   uint16_t state = readJoystick(PLAYER1_X, PLAYER1_Y) | (readJoystick(PLAYER2_X, PLAYER2_Y) << 4) | (readDigital(button1, button2, swtch_pin) << 8);
-  //Serial.printf("JoystickX: %d JoystickY: %d\n",analogRead(PLAYER1_X), analogRead(PLAYER1_Y));
-  //Serial.printf("ButtonP: %d ButtonG: %d\n", digitalRead(button1), digitalRead(button2));
-  // Send state to RPi
   sendState(state);
   delay(5);
 }
