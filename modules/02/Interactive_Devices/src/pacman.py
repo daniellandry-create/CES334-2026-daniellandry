@@ -227,9 +227,9 @@ class Gameplay(Scene):
         if now < self.start_time:
             return self
 
-        # Power ups: each player's button triggers their current character's ability
+        # Power ups: each player's button triggers their current character's ability (none in sudden death)
         for player in (0, 1):
-            if inputs.just_pressed(self.controls[player][4]) and self.power_ready(player, now):
+            if inputs.just_pressed(self.controls[player][4]) and self.power_ready(player, now) and not self.sudden_death:
                 self.power_active[player] = True
                 self.last_power[player] = now
             if self.power_active[player] and (now - self.last_power[player] > POWER_ACTIVE):
@@ -282,10 +282,14 @@ class Gameplay(Scene):
         pygame.draw.circle(screen, "yellow", self.pacman.center, PLAYER_RADIUS) # Pacman
         pygame.draw.circle(screen, "red", self.ghost.center, PLAYER_RADIUS) # Ghost
 
-        # Power-up icons: green = ready, red = in use or cooling down. Player 2's label faces them.
+        # Power-up icons: green = ready, red = in use or cooling down, gray = disabled (sudden death).
+        # Player 2's label faces them.
         now = time.monotonic()
         for player, label in ((0, "P1"), (1, "P2")):
-            color = "green" if self.power_ready(player, now) else "red"
+            if self.sudden_death:
+                color = "gray"
+            else:
+                color = "green" if self.power_ready(player, now) else "red"
             pygame.draw.circle(screen, color, self.icon_centers[player], TIMER_RADIUS)
             text = self.cooldown_font.render(label, True, "black")
             if player == 1:

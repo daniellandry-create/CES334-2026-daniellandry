@@ -13,7 +13,7 @@ Before diving into the technical side of the project, a brief summary of the rul
 2. Unlike the original, there is only one dot on the map at any given time, and the Pacman must collect it. It moves to a different random position every 10 seconds, or when the Pacman collects it, whichever comes first.
 3. Each game is best-of-7 rounds. For the first 6 rounds (or until someone wins 4), the two players alternate between being the ghost and being the Pacman, so each player gets 3 turns as each character. The 7th round (if necessary) is a sudden death round.
 4. To win a round, the Pacman must collect 5 dots without being caught by the ghost and before the timer, initially set at 1:30, runs out. The ghost must either catch the Pacman or defend until time expires. In the case of a sudden death round, the first player to 5 dots wins (the ghost can no longer catch the Pacman, and the two characters pass right through each other).
-5. Each character has their own power-up, activated by a push-button. The Pacman's power-up slows down the ghost to half speed for three seconds. The ghost's power-up blocks the Pacman from using the wrap-around tunnels for three seconds, so the edges of the screen act like walls. After a power-up is used, it has a five second cooldown before it can be used again.
+5. Each character has their own power-up, activated by a push-button. The Pacman's power-up slows down the ghost to half speed for three seconds. The ghost's power-up blocks the Pacman from using the wrap-around tunnels for three seconds, so the edges of the screen act like walls. After a power-up is used, it has a five second cooldown before it can be used again. Neither character has a power-up in a sudden death round.
 6. Each player always starts in their own corner of the map, no matter which character they are playing that round.
 
 ## Technical Overview
@@ -80,7 +80,7 @@ This is the game itself, written with Pygame. It runs at 60 frames per second, a
 
 **Two players on opposite sides.** Since the players sit across from each other, player 2 sees everything upside down. To fix this, player 2's joystick is reversed in `PLAYER2_CONTROLS`, so that pushing left moves their character to their left. All of the text is also drawn twice by `draw_for_both()`: once below the middle of the screen for player 1, and once rotated 180 degrees above the middle for player 2. Some text is different for each player, like "You are Pac-Man" and "You are the Ghost", or "You win!" and "You lose".
 
-**Power-ups.** Power-up state belongs to the player, not the character. Each player's button triggers whatever their character can do that round. Each player has an icon on the border on their side of the screen, which is green when their power-up is ready and red while it's being used or cooling down.
+**Power-ups.** Power-up state belongs to the player, not the character. Each player's button triggers whatever their character can do that round. Each player has an icon on the border on their side of the screen, which is green when their power-up is ready and red while it's being used or cooling down. In a sudden death round, power-ups are turned off and both icons are gray.
 
 **On/off switch.** When the switch is turned off, the screen goes black and the game stops. Turning it back on restarts at the main menu, like turning a real console off and on.
 
