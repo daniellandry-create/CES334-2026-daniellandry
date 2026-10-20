@@ -4,6 +4,7 @@ It sometimes amazes me how much broken code is on the internet. I wish I hadn't 
 */
 
 #include "esp_mac.h"
+
 uint8_t baseMac[6];
 
 void setup() {
@@ -19,3 +20,5 @@ void loop() {
   Serial.printf("%02X\n", baseMac[5]);
   delay(1000);
 }
+
+//Mac Address: 80:45:6B:2B:28:50
