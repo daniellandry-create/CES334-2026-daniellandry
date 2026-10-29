@@ -15,7 +15,7 @@
  6. Swapped motor driver. Success! The culprit was a faulty motor driver, stepper now rotating properly
  7. Stepper motor speed can't be set to higher than 10 when powered by 5V
  8. Needed to use "ESP32Servo" arduino library, not "Servo"
- 9. Servo can't share same power supply as stepper, because the wall power is seemingly noisy and causes servo to behave erratically. Servo needed to use esp32 5V instead.
+ 9. Servo ground not shared with stepper motor ground, cause eratic behavior in servo
  10. Correction to program regarding servo pattern: "servo_degrees = (servo_degrees + 10) % 190" (instead of "% 180")
  
  ## Video:
