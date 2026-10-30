@@ -9,13 +9,11 @@ sleep 3
 cd "$(dirname "$0")" || exit 1  #Exit if directory doesn't exist
 
 # Start virtual environment so sounddevice can be installed
-source .venv/bin/activate
-
 echo "Starting Birds program..."
 
 # Launch birds programs
-python bird_receiver.py
-python main.py
+.venv/bin/python -u bird_receiver.py &
+.venv/bin/python -u main.py &
 
 # Make note when program ends
 echo "Birds program terminated"
