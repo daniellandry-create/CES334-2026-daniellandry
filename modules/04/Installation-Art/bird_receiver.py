@@ -34,6 +34,7 @@ def receive_loop():
         # Waits until one UDP packet arrives on the socket, then returns that packet’s contents and sender’s address.
         data, addr = sock.recvfrom(bufferSize) 
 
+
          # Ignore malformed packets
         if len(data) != SIZE:
             continue
@@ -41,7 +42,7 @@ def receive_loop():
         # Parse received data. 
         # Struct.unpack() turns data in primitive python data types using FMT, a string defining expected layout of data
         bird_id, branch, volume = struct.unpack(FMT, data)
-
+        print(bird_id, branch, volume)
         # Wait until aquire lock then edit state
         with birds_lock:
             birds[bird_id] = {
