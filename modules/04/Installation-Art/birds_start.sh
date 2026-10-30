@@ -15,5 +15,7 @@ echo "Starting Birds program..."
 .venv/bin/python -u bird_receiver.py &
 .venv/bin/python -u main.py &
 
+wait
+
 # Make note when program ends
 echo "Birds program terminated"
