@@ -112,6 +112,8 @@ def wait_for_audio(timeout=60):
 
 wait_for_audio()
 
+print(sd.query_devices())
+
 # Execution loop
 while True:
     # Step 1: Sync bird info with socket script
