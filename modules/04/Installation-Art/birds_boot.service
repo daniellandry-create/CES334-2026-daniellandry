@@ -1,12 +1,14 @@
 [Unit]
 Description=service to start birds program on boot
-After=network.target
+After=network-online.target
 Wants=network-online.target
 
 [Service]
 Type=simple
+User=stu3340
 ExecStart= /home/stu3340/birds_start.sh
-Restart=on-abort
+Restart=on-failure
+RestartSec=5
 
 [Install]
 WantedBy=multi-user.target
