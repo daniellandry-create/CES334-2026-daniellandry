@@ -100,17 +100,17 @@ forest_manager = ForestManager(birds, branches)
 MIN_WAIT = 1
 MAX_WAIT = 3
 
-def wait_for_audio(timeout=60):
-    start = time.time()
-    while time.time() - start < timeout:
-        try:
-            sd.query_devices(kind="output")   # raises if there is no output device
-            return
-        except Exception:
-            time.sleep(1)
-    raise RuntimeError("No audio output device found")
+# def wait_for_audio(timeout=60):
+#     start = time.time()
+#     while time.time() - start < timeout:
+#         try:
+#             sd.query_devices(kind="output")   # raises if there is no output device
+#             return
+#         except Exception:
+#             time.sleep(1)
+#     raise RuntimeError("No audio output device found")
 
-wait_for_audio()
+# wait_for_audio()
 
 print(sd.query_devices())
 
