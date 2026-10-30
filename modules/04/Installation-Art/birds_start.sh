@@ -13,7 +13,8 @@ source .venv/bin/activate
 
 echo "Starting Birds program..."
 
-# Launch birds program
+# Launch birds programs
+python bird_receiver.py
 python main.py
 
 # Make note when program ends
