@@ -4,12 +4,13 @@ import struct
 import json
 import time
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+from urllib.parse import urlparse, parse_qs
 
 localPort = 8888
 bufferSize = 1024
 
 # String defining layout of data foo received packet
-FMT = "<iif"                      # int32 bird_id, int32 branch, float32 volume
+FMT = "<iid"                      # int bird_id, int branch, double volume
 SIZE = struct.calcsize(FMT)       # 12 bytes
 
 # Dictionary for keeping track of birds
@@ -22,7 +23,6 @@ sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 
 
 def init():
-
     # Let's multiple sockets share port (probably not necessary)
     sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, 1)
     sock.bind(('', localPort)) # Binds
@@ -33,7 +33,6 @@ def receive_loop():
     while True:
         # Waits until one UDP packet arrives on the socket, then returns that packet’s contents and sender’s address.
         data, addr = sock.recvfrom(bufferSize) 
-
 
          # Ignore malformed packets
         if len(data) != SIZE:
@@ -56,15 +55,28 @@ def receive_loop():
 # Class for 
 class BirdHandler(BaseHTTPRequestHandler):
     def do_GET(self):
+        parsed = urlparse(self.path)
         # Make sure get request is asking for birds' states
-        if self.path != "/birds":
+        if parsed.path != "/birds":
             self.send_error(404)
             return
+        
+        # Extract parameter
+        params = parse_qs(parsed.query)
+        bird_id_str = params.get("bird_id", [None])[0]
 
+        bird_id = int(bird_id_str)
+
+        
         # Aquire lock then create response to request
         with birds_lock:
+
+            if bird_id not in birds:
+                self.send_error(404, "Unknown bird_id")
+                return
+
             # Converts dictionary to JSON string and encodes it into bytes
-            response = json.dumps(birds).encode("utf-8")
+            response = json.dumps(birds[bird_id]).encode("utf-8")
 
         self.send_response(200)
         self.send_header("Content-Type", "application/json")
