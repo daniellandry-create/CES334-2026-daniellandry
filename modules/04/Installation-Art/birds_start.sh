@@ -1,7 +1,8 @@
 #!/bin/bash
 
 # This script is for starting the birds program
-sleep 5
+#sleep for 10 seconds and let speaker connect
+sleep 20
 # Run from the folder this script lives in, so relative paths work. $0 is env variable containing path to script
 cd "$(dirname "$0")" || exit 1  #Exit if directory doesn't exist
 
