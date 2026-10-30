@@ -92,7 +92,8 @@ branches = [
 ]
 
 birds = [
-    Bird(id=0)
+    Bird(id=0), 
+    Bird(id=1)
 ]
 
 forest_manager = ForestManager(birds, branches)
