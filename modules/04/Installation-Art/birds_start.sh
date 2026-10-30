@@ -9,7 +9,7 @@ sleep 3
 cd "$(dirname "$0")" || exit 1  #Exit if directory doesn't exist
 
 # Start virtual environment so sounddevice can be installed
-source venve .venv/bin/activate
+source venv .venv/bin/activate
 
 echo "Starting Birds program..."
 
