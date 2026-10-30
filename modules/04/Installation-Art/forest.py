@@ -193,8 +193,6 @@ class ForestManager:
 
             # Bird not on branch
             if data.get("branch_id") is None:
-                print("None!")
-
                 bird.on_branch = False
                 bird.melody_sample = get_sample_from_melody(bird.melody_obj)
 
@@ -251,8 +249,11 @@ class ForestManager:
 def get_state_http(bird_id: int):
     params = urlencode({"bird_id": bird_id})
 
-    with urlopen(f"http://127.0.0.1:{HTTP_PORT}/state?{params}") as response:
-        return json.load(response)
+    try:
+        with urlopen(f"http://127.0.0.1:{HTTP_PORT}/state?{params}") as response:
+            return json.load(response)
+    except:
+        return {}
 
 def assign_mated_traits(
         bird: Bird, 
