@@ -39,11 +39,59 @@ branches = [
         bpm=sound_lib.TEMPOS[3],
         tweets=sound_lib.TWEETS[0]
     ),
+    Branch(
+        id=5,
+        x_loc=2.0,
+        y_loc=2.0,
+        bpm=sound_lib.TEMPOS[0],
+        tweets=sound_lib.TWEETS[1]
+    ),
+    Branch(
+        id=6,
+        x_loc=5.0,
+        y_loc=5.0,
+        bpm=sound_lib.TEMPOS[1],
+        tweets=sound_lib.TWEETS[1]
+    ),
+    Branch(
+        id=7,
+        x_loc=3.0,
+        y_loc=5.5,
+        bpm=sound_lib.TEMPOS[2],
+        tweets=sound_lib.TWEETS[1]
+    ),
+    Branch(
+        id=8,
+        x_loc=8.0,
+        y_loc=8.0,
+        bpm=sound_lib.TEMPOS[2],
+        tweets=sound_lib.TWEETS[0]
+    ),
+    Branch(
+        id=9,
+        x_loc=9.0,
+        y_loc=1.0,
+        bpm=sound_lib.TEMPOS[3],
+        tweets=sound_lib.TWEETS[0]
+    ),
+    Branch(
+        id=10,
+        x_loc=2.0,
+        y_loc=2.0,
+        bpm=sound_lib.TEMPOS[0],
+        tweets=sound_lib.TWEETS[1]
+    ),
+    Branch(
+        id=11,
+        x_loc=5.0,
+        y_loc=5.0,
+        bpm=sound_lib.TEMPOS[1],
+        tweets=sound_lib.TWEETS[1]
+    )
 ]
 
 birds = [
-    Bird(id=0),
-    Bird(id=1)
+    Bird(id=0)
 ]
 
 forest_manager = ForestManager(birds, branches)
@@ -61,6 +109,7 @@ while True:
 
     # Step 3: Skip invalid birds
     if not bird.on_branch or bird.melody_obj.volume == 0:
+        time.sleep(0.5)
         continue
 
     # Step 4: Play bird melody

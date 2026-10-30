@@ -191,14 +191,16 @@ class ForestManager:
             # Get data by id
             data = get_state_http(bird.id)
 
+            print(f"Data: {data}")
+
             # Bird not on branch
-            if data.get("branch_id") is None:
+            if data.get("branch") is None or data.get("branch") == -1:
                 bird.on_branch = False
                 bird.melody_sample = get_sample_from_melody(bird.melody_obj)
 
                 continue
 
-            branch = self.branches[data.get("branch_id", 0)]
+            branch = self.branches[data.get("branch", 0)]
 
             bird.on_branch = True
             bird.x_loc = branch.x_loc
@@ -250,7 +252,7 @@ def get_state_http(bird_id: int):
     params = urlencode({"bird_id": bird_id})
 
     try:
-        with urlopen(f"http://127.0.0.1:{HTTP_PORT}/state?{params}") as response:
+        with urlopen(f"http://127.0.0.1:{HTTP_PORT}/birds?{params}") as response:
             return json.load(response)
     except:
         return {}
