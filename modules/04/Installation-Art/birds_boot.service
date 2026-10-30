@@ -6,7 +6,7 @@ Wants=network-online.target
 [Service]
 Type=simple
 User=stu3340
-ExecStart= /home/stu3340/birds_start.sh
+ExecStart=/home/stu3340/Documents/repos/CES334-2026-daniellandry/modules/04/Installation-Art/birds_start.sh
 Restart=on-failure
 RestartSec=5
 
