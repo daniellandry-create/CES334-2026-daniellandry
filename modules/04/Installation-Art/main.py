@@ -7,85 +7,85 @@ import sounddevice as sd
 branches = [
     Branch(
         id=0,
-        x_loc=2.0,
-        y_loc=2.0,
+        x_loc=-10.0,
+        y_loc=0.0,
         bpm=sound_lib.TEMPOS[0],
         tweets=sound_lib.TWEETS[1]
     ),
     Branch(
         id=1,
-        x_loc=5.0,
-        y_loc=5.0,
+        x_loc=10.0,
+        y_loc=4.0,
         bpm=sound_lib.TEMPOS[1],
         tweets=sound_lib.TWEETS[1]
     ),
     Branch(
         id=2,
-        x_loc=3.0,
-        y_loc=5.5,
+        x_loc=1.0,
+        y_loc=2.0,
         bpm=sound_lib.TEMPOS[2],
         tweets=sound_lib.TWEETS[1]
     ),
     Branch(
         id=3,
-        x_loc=8.0,
-        y_loc=8.0,
+        x_loc=-6.0,
+        y_loc=-4.0,
         bpm=sound_lib.TEMPOS[2],
         tweets=sound_lib.TWEETS[0]
     ),
     Branch(
         id=4,
-        x_loc=9.0,
+        x_loc=7.0,
         y_loc=1.0,
         bpm=sound_lib.TEMPOS[3],
         tweets=sound_lib.TWEETS[0]
     ),
     Branch(
         id=5,
-        x_loc=2.0,
+        x_loc=-4.0,
         y_loc=2.0,
         bpm=sound_lib.TEMPOS[0],
         tweets=sound_lib.TWEETS[1]
     ),
     Branch(
         id=6,
-        x_loc=5.0,
-        y_loc=5.0,
+        x_loc=-9.0,
+        y_loc=4.0,
         bpm=sound_lib.TEMPOS[1],
         tweets=sound_lib.TWEETS[1]
     ),
     Branch(
         id=7,
-        x_loc=3.0,
-        y_loc=5.5,
+        x_loc=4.0,
+        y_loc=0.0,
         bpm=sound_lib.TEMPOS[2],
         tweets=sound_lib.TWEETS[1]
     ),
     Branch(
         id=8,
-        x_loc=8.0,
-        y_loc=8.0,
+        x_loc=6.0,
+        y_loc=-3.0,
         bpm=sound_lib.TEMPOS[2],
         tweets=sound_lib.TWEETS[0]
     ),
     Branch(
         id=9,
-        x_loc=9.0,
-        y_loc=1.0,
+        x_loc=1.0,
+        y_loc=0,
         bpm=sound_lib.TEMPOS[3],
         tweets=sound_lib.TWEETS[0]
     ),
     Branch(
         id=10,
-        x_loc=2.0,
-        y_loc=2.0,
+        x_loc=6.0,
+        y_loc=7.0,
         bpm=sound_lib.TEMPOS[0],
         tweets=sound_lib.TWEETS[1]
     ),
     Branch(
         id=11,
-        x_loc=5.0,
-        y_loc=5.0,
+        x_loc=11.0,
+        y_loc=1.0,
         bpm=sound_lib.TEMPOS[1],
         tweets=sound_lib.TWEETS[1]
     )
