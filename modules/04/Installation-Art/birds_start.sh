@@ -6,19 +6,23 @@
 cd "$(dirname "$0")" || exit 1  #Exit if directory doesn't exist
 
 # Wait for a Bluetooth audio sink
-while true; do
-    SINK=$(pactl list short sinks 2>/dev/null |
-        awk '$2 ~ /^bluez_output/ {print $2; exit}')
+#while true; do
+#    SINK=$(pactl list short sinks 2>/dev/null |
+#        awk '$2 ~ /^bluez_output/ {print $2; exit}')
+#
+#    if [ -n "$SINK" ]; then
+#        break
+#    fi
+#
+#    echo "Waiting for bluetooth..."
+#    sleep 2
+#done
 
-    if [ -n "$SINK" ]; then
-        break
-    fi
+#pactl set-default-sink "$SINK"
 
-    echo "Waiting for bluetooth..."
-    sleep 2
-done
+echo "Sleeping 20 for Bluetooth"
 
-pactl set-default-sink "$SINK"
+sleep 20
 
 # Start virtual environment so sounddevice can be installed
 echo "Starting Birds program..."
