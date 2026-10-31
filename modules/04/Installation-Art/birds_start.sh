@@ -6,7 +6,7 @@
 cd "$(dirname "$0")" || exit 1  #Exit if directory doesn't exist
 
 #sleep for 10 seconds and let speaker connect
-#sleep 5
+sleep 10
 
 # Start virtual environment so sounddevice can be installed
 echo "Starting Birds program..."
