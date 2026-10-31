@@ -6,6 +6,7 @@ from dataclasses import dataclass, asdict
 from typing import Sequence
 import random
 import json
+import time
 from urllib.request import urlopen
 from urllib.parse import urlencode
 
@@ -76,8 +77,6 @@ class Bird:
         play_audio(self.melody_sample)
 
     def mate(self, other: "Bird"):
-        print("Mating!")
-        
         # Reassign pitches, beats, and type for each bird
         pitches_1 = self.melody_obj.pitches
         pitches_2 = other.melody_obj.pitches
@@ -90,6 +89,9 @@ class Bird:
 
         assign_mated_traits(self, pitches_1, pitches_2, beats_1, beats_2, type_1, type_2)
         assign_mated_traits(other, pitches_1, pitches_2, beats_1, beats_2, type_1, type_2)
+
+        time.sleep(1)
+        play_audio(MATING_MELODY)
 
     def calculate_score(self, other: "Bird"):
         # Calculate mating score based on the compatibility of the two birds

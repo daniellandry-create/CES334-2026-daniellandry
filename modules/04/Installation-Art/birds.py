@@ -413,3 +413,17 @@ def synth_melody(
         play_audio(melody_audio)
 
     return melody_audio
+
+# ============================================================
+# Mating Melody — Pachelbel's Canon in D
+# ============================================================
+
+MATING_MELODY = synth_melody(
+    120,
+    [1, 1,  1,  1,  1,  1,  1,  1,  1, 2],
+    [2, 6,  4,  2,  1, -1, -3, -1,  1,  2],
+    [8, 3,  3,  3,  3,  3,  3,  3,  3,  16],
+    BirdType.SONGBIRD,
+    1,
+    False
+)
