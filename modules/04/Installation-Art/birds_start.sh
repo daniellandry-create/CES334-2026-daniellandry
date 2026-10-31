@@ -14,6 +14,7 @@ while true; do
         break
     fi
 
+    echo "Waiting for bluetooth..."
     sleep 2
 done
 
