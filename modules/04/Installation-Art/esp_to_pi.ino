@@ -59,13 +59,14 @@ void setup() {
 
   WiFi.disconnect(true); // Erases stored wifi credentials
   WiFi.mode(WIFI_STA); // Accesses wifi as a station
-  WiFi.begin(ssid);
+  WiFi.begin(ssid); // Connect to wifi (no password)
 
   Serial.println("Trying to connect to WiFi");
 
   int max_attempts = 40;
   int attempts = 0;
 
+  // loop that waits for wifi connection to be established
   while (WiFi.status() != WL_CONNECTED){
     delay(500);
     Serial.print(".");
@@ -87,7 +88,9 @@ void setup() {
     // addBird(3, 13, 20.0f);
     // addBird(4, 17, 25.0f);
     
+    // Binds udp socket to localPort to start sending and listening to packets
     udp.begin(localPort);
+    // Print IP and port of esp32
     Serial.printf("UDP Client: %s:%i \n", WiFi.localIP().toString().c_str(), localPort);
 
     // Serial.println("Finding pi's IP");
@@ -112,19 +115,21 @@ void loop() {
   int photo_raw = analogRead(PHOTO_PIN);
   int photo_clamped = photo_raw;
 
+  // Forces sensor value to stay strictly within a defined window
   if (photo_raw < PHOTO_LOW) {
     photo_clamped = PHOTO_LOW;
   } else if (photo_raw > PHOTO_HIGH) {
     photo_clamped = PHOTO_HIGH;
   }
 
+  // Calculate volume level
   double volume = (double) (photo_clamped - PHOTO_LOW) / PHOTO_SCALE;
 
   // Voltage divider reading
   int div_raw = analogRead(DIV_PIN);
   double div_voltage = (div_raw / 4096.0) * 3.3;
 
-  int branch_id = -1;
+  int branch_id = -1; // If above all ranges mapping to branches, bird is disconnected, send -1
 
   for (int i = 0; i < NUM_BRANCHES; i++) {
     if (div_voltage < DIV_THRESHOLDS[i]) {
@@ -135,14 +140,14 @@ void loop() {
 
   // Update state of bird
   updateBirdState(branch_id, volume);
-
+  // Print update values
   Serial.printf("Volume: %lf, Branch Id: %d, Photo Raw: %d, Div Volts: %lf\n", volume, branch_id, photo_raw, div_voltage);
-
+  // Send state via UDP
   sendBird();
   delay(500);
 }
 
-// Send state of one bird as 12 unsigned 8-bit integers
+// Send state of one bird as 12 unsigned 8-bit integers (4 for each )
 void sendBird() {
   udp.beginPacket(piIP, serverPort);
   udp.write((const uint8_t*)&bird, sizeof(BirdState));

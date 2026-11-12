@@ -9,7 +9,7 @@ from urllib.parse import urlparse, parse_qs
 localPort = 8888
 bufferSize = 1024
 
-# String defining layout of data foo received packet
+# String defining layout of data for received packet
 FMT = "<iid"                      # int bird_id, int branch, double volume
 SIZE = struct.calcsize(FMT)       # 12 bytes
 
