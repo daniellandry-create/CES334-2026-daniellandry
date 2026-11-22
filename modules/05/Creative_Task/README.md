@@ -10,4 +10,5 @@ For my Kinematic Art Project, I create an infinite marble run, where a marble us
 ### 3D Printed Parts (STL files linked):
 3. Tracks
     * Normal: 
-    * 
+    * Curve: https://github.com/daniellandry-create/CES334-2026-daniellandry/blob/d2a19701786465fc9c23edf525025cc50fa965e3/modules/05/Creative_Task/stl_files/full_curve.stl
+4. 
